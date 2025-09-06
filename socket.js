@@ -1,8 +1,6 @@
 
 
-//━━━━━━━━━━━━━━━━━━━━━━━━//
-// Modules nécessaires pour le fonctionnement du bot
-require("./setting") // Charge les paramètres de configuration globaux
+require("./setting")
 const {
   downloadContentFromMessage,
   proto,
@@ -12,134 +10,106 @@ const {
   generateWAMessageFromContent,
   GroupSettingChange,
   jidDecode,
-  WAGroupMetadata,
-  emitGroupParticipantsUpdate,
-  emitGroupUpdate,
-  generateMessageID,
-  jidNormalizedUser,
-  generateForwardMessageContent,
-  WAGroupInviteMessageGroupMetadata,
-  GroupMetadata,
-  Headers,
   delay,
-  WA_DEFAULT_EPHEMERAL,
-  WADefault,
-  getAggregateVotesInPollMessage,
   generateWAMessageContent,
-  areJidsSameUser,
   useMultiFileAuthState,
-  fetchLatestBaileysVersion,
-  makeCacheableSignalKeyStore,
-  makeWaconnet,
   makeInMemoryStore,
-  MediaType,
-  WAMessageStatus,
   downloadAndSaveMediaMessage,
-  AuthenticationState,
-  initInMemoryKeyStore,
-  MiscMessageGenerationOptions,
-  useSingleFileAuthState,
-  BufferJSON,
-  WAMessageProto,
-  MessageOptions,
-  WAFlag,
-  WANode,
-  WAMetric,
-  ChatModification,
-  MessageTypeProto,
-  WALocationMessage,
-  ReconnectMode,
-  WAContextInfo,
-  ProxyAgent,
-  waChatKey,
-  MimetypeMap,
-  MediaPathMap,
-  WAContactMessage,
-  WAContactsArrayMessage,
-  WATextMessage,
-  WAMessageContent,
-  WAMessage,
-  BaileysError,
-  WA_MESSAGE_STATUS_TYPE,
-  MediaConnInfo,
-  URL_REGEX,
-  WAUrlInfo,
-  WAMediaUpload,
-  mentionedJid,
-  processTime,
-  Browser,
-  MessageType,
-  Presence,
-  WA_MESSAGE_STUB_TYPES,
-  Mimetype,
-  relayWAMessage,
-  Browsers,
-  DisconnectReason,
-  WAconnet,
-  getStream,
-  WAProto,
-  isBaileys,
-  AnyMessageContent,
+  generateForwardMessageContent,
   templateMessage,
   InteractiveMessage,
   Header,
-} = require("@whiskeysockets/baileys") // Bibliothèque principale WhatsApp
+} = require("@whiskeysockets/baileys")
 
-// Modules système et utilitaires
-const os = require("os") // Module système d'exploitation pour informations serveur
-const fs = require("fs") // Module système de fichiers pour lecture/écriture
-const fg = require("api-dylux") // API dylux pour téléchargements médias
-const fetch = require("node-fetch") // Module pour les requêtes HTTP
-const util = require("util") // Utilitaires Node.js pour formatage
-const axios = require("axios") // Client HTTP pour requêtes API avancées
-const { exec, execSync } = require("child_process") // Exécution de commandes système
-const chalk = require("chalk") // Coloration du texte dans la console
-const nou = require("node-os-utils") // Utilitaires système pour monitoring
-const moment = require("moment-timezone") // Gestion des dates et fuseaux horaires
-const path = require("path") // Gestion des chemins de fichiers
-const didyoumean = require("didyoumean") // Suggestions de commandes similaires
-const similarity = require("similarity") // Calcul de similarité entre chaînes
-const speed = require("performance-now") // Mesure de performance et vitesse
-const { Sticker } = require("wa-sticker-formatter") // Création de stickers WhatsApp
-const { igdl } = require("btch-downloader") // Téléchargeur Instagram
-const yts = require("yt-search") // Recherche YouTube
-// const ddownr = require("ddownr") // Téléchargeur universel - Module not available
-const cheerio = require("cheerio") // Parser HTML pour scraping
-const crypto = require("crypto") // Fonctions de cryptographie
-const jimp = require("jimp") // Manipulation d'images
-const webp = require("node-webpmux") // Manipulation des fichiers WebP
+const os = require("os")
+const fs = require("fs")
+const fg = require("api-dylux")
+const fetch = require("node-fetch")
+const util = require("util")
+const axios = require("axios")
+const { exec, execSync } = require("child_process")
+const chalk = require("chalk")
+const nou = require("node-os-utils")
+const moment = require("moment-timezone")
+const path = require("path")
+const didyoumean = require("didyoumean")
+const similarity = require("similarity")
+const speed = require("performance-now")
+const { Sticker } = require("wa-sticker-formatter")
+const { igdl } = require("btch-downloader")
+const yts = require("yt-search")
+const cheerio = require("cheerio")
+const crypto = require("crypto")
+const jimp = require("jimp")
+const webp = require("node-webpmux")
+const sharp = require("sharp")
+const fsExtra = require("fs-extra")
+const { unlink } = require("fs").promises
+const { ImageUploadService } = require("node-upload-images")
+const { promisify } = require("util")
 
-// Modules de scraping personnalisés
-const jktNews = require("./library/scrape/jktNews") // Nouvelles JKT48
-const otakuDesu = require("./library/scrape/otakudesu") // Anime OtakuDesu
-const Kusonime = require("./library/scrape/kusonime") // Anime Kusonime
-const { quote } = require("./library/scrape/quote.js") // Citations stylisées
-const { fdown } = require("./library/scrape/facebook.js") // Téléchargeur Facebook
-// const { gempa } = require("./library/scrape/bmkg.js") // Informations séismes BMKG - File not found
+//===================SESSION-AUTH============================
+const { File } = require('megajs')
+const config = global
+
+const initializeSession = async () => {
+  try {
+    if (!fs.existsSync(__dirname + '/session/creds.json')) {
+      if (!config.SESSION_ID) {
+        console.log('[ ⚠️ ] Aucun SESSION_ID trouvé. Utilisation du pairing code...')
+        return false // Indique qu'on doit utiliser le pairing code
+      }
+
+      const sessdata = config.SESSION_ID.replace("Wa~", '')
+      const filer = File.fromURL(`https://mega.nz/file/${sessdata}`)
+
+      return new Promise((resolve, reject) => {
+        filer.download((err, data) => {
+          if (err) {
+            console.log('[ ⚠️ ] Échec du téléchargement de session. Utilisation du pairing code...')
+            resolve(false) // Utilise le pairing code en cas d'erreur
+          } else {
+            fs.writeFileSync(__dirname + '/session/creds.json', data)
+            console.log("[ 📥 ] Session downloaded ✅")
+            resolve(true)
+          }
+        })
+      })
+    }
+    return true // Session existe déjà
+  } catch (error) {
+    console.error('Erreur lors de l\'initialisation de la session:', error)
+    return false // Utilise le pairing code en cas d'erreur
+  }
+}
+//////////////////////////////////////////////////////////
+
+const jktNews = require("./library/scrape/jktNews")
+const otakuDesu = require("./library/scrape/otakudesu")
+const Kusonime = require("./library/scrape/kusonime")
+const { quote } = require("./library/scrape/quote.js")
+const { fdown } = require("./library/scrape/facebook.js")
 
 const {
-  komiku, // Scraper de manga Komiku
-  detail, // Détails de manga
+  komiku,
+  detail,
 } = require("./library/scrape/komiku")
 
 const {
-  wikimedia, // Scraper Wikimedia pour images
+  wikimedia,
 } = require("./library/scrape/wikimedia")
 
 const {
-  CatBox, // Service d'upload CatBox
-  fileIO, // Service d'upload FileIO
-  pomfCDN, // Service d'upload PomfCDN
-  uploadFile, // Fonction générique d'upload
+  CatBox,
+  fileIO,
+  pomfCDN,
+  uploadFile,
 } = require("./library/scrape/uploader")
 
-// Fonction principale du bot - Point d'entrée pour tous les messages
 module.exports = async (X, m) => {
   try {
-    // Extraction de l'identifiant du chat (privé ou groupe)
     const from = m.key.remoteJid
 
-    // Extraction du contenu du message selon son type
     var body =
       m.mtype === "interactiveResponseMessage"
         ? JSON.parse(m.message.interactiveResponseMessage.nativeFlowResponseMessage.paramsJson).id
@@ -206,12 +176,15 @@ module.exports = async (X, m) => {
     const isBot = botNumber.includes(senderNumber) // Vérifie si c'est le bot
     const quoted = m.quoted ? m.quoted : m // Message cité
     const mime = (quoted.msg || quoted).mimetype || "" // Type MIME du fichier
-    const groupMetadata = m.isGroup ? await X.groupMetadata(from).catch((e) => {}) : "" // Métadonnées du groupe
-    const groupName = m.isGroup ? groupMetadata.subject : "" // Nom du groupe
-    const participants = m.isGroup ? await groupMetadata.participants : "" // Participants du groupe
+    const groupMetadata = m.isGroup ? await X.groupMetadata(from).catch((e) => null) : null // Métadonnées du groupe
+    const groupName = m.isGroup && groupMetadata ? groupMetadata.subject : "" // Nom du groupe
+    const participants = m.isGroup && groupMetadata ? groupMetadata.participants : "" // Participants du groupe
     const groupAdmins = m.isGroup ? await getGroupAdmins(participants) : "" // Administrateurs du groupe
     const isBotAdmins = m.isGroup ? groupAdmins.includes(botNumber) : false // Bot est admin
-    const isAdmins = m.isGroup ? groupAdmins.includes(m.sender) : false // Utilisateur est admin
+    const isAdmins = m.isGroup ? groupAdmins.includes(m.sender) : false
+    const isOwner = Hisoka
+    const sock = X
+    const qmsg = quoted
 
     //━━━━━━━━━━━━━━━━━━━━━━━━//
     // Configuration de la console pour les logs
@@ -273,7 +246,159 @@ module.exports = async (X, m) => {
         resolve(ab)
       })
     }
-    const fakethmb = await reSize(ppuser, 300, 300) // Miniature factice
+    const fakethmb = await reSize(ppuser, 300, 300)
+
+    // Fonctions utilitaires supplémentaires
+    const formatp = (bytes) => {
+      const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
+      if (bytes === 0) return '0 Byte'
+      const i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)))
+      return Math.round(bytes / Math.pow(1024, i), 2) + ' ' + sizes[i]
+    }
+
+
+    const GIFBufferToVideoBuffer = async (image) => {
+      try {
+        const filename = `${Math.random().toString(36)}`
+        const gifPath = `./gif/${filename}.gif`
+        const mp4Path = `./gif/${filename}.mp4`
+        
+        if (!fs.existsSync('./gif')) {
+          fs.mkdirSync('./gif', { recursive: true })
+        }
+        
+        await fsExtra.writeFileSync(gifPath, image)
+        
+        await new Promise((resolve, reject) => {
+          exec(
+            `ffmpeg -i ${gifPath} -movflags faststart -pix_fmt yuv420p -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" ${mp4Path}`,
+            (error) => {
+              if (error) {
+                console.error('FFmpeg error:', error)
+                reject(error)
+              } else {
+                resolve()
+              }
+            }
+          )
+        })
+        
+        await sleep(2000)
+        
+        if (!fs.existsSync(mp4Path)) {
+          throw new Error(`Le fichier vidéo n'a pas été créé: ${mp4Path}`)
+        }
+        
+        const buffer5 = await fsExtra.readFileSync(mp4Path)
+        
+        try {
+          await Promise.all([unlink(mp4Path), unlink(gifPath)])
+        } catch (cleanupError) {
+          console.error('Erreur lors du nettoyage:', cleanupError)
+        }
+        
+        return buffer5
+      } catch (error) {
+        console.error('Erreur GIFBufferToVideoBuffer:', error)
+        throw error
+      }
+    }
+
+    const generateReaction = async (reactionName, action, user, quotedUser = null) => {
+      try {
+        const url = `https://api.waifu.pics/sfw/${reactionName}`
+        const response = await axios.get(url)
+        const imageUrl = response.data.url
+
+        const gifBufferResponse = await fetch(imageUrl)
+        const gifBuffer = await gifBufferResponse.buffer()
+
+        let caption, mentions
+        if (quotedUser) {
+          caption = `@${user.split("@")[0]} a ${action} @${quotedUser.split("@")[0]}`
+          mentions = [user, quotedUser]
+        } else {
+          caption = `@${user.split("@")[0]} s'est ${action} lui même.`
+          mentions = [user]
+        }
+
+        try {
+          const videoBuffer = await GIFBufferToVideoBuffer(gifBuffer)
+          return {
+            video: videoBuffer,
+            gifPlayback: true,
+            caption: caption,
+            mentions: mentions
+          }
+        } catch (conversionError) {
+          console.error('Conversion failed, sending original gif:', conversionError)
+          return {
+            image: gifBuffer,
+            caption: caption,
+            mentions: mentions
+          }
+        }
+
+      } catch (error) {
+        console.error('Erreur lors de la récupération des données:', error)
+        return null
+      }
+    }
+
+    const example = (teks) => {
+      return `*Example Usage:*\n*${m.prefix+command}* ${teks}`
+    }
+
+    const Case = {
+      get: (caseName) => {
+        const data = fs.readFileSync('./socket.js', 'utf8')
+        const caseRegex = new RegExp(`case\s*["\']${caseName}["\']\s*:\s*{([\s\S]*?)}\s*break`, 'i')
+        const match = data.match(caseRegex)
+        if (!match) {
+          throw new Error(`Case "${caseName}" not found.`)
+        }
+        return `case "${caseName}": {${match[1]}}\nbreak`
+      },
+      add: (caseCode) => {
+        const data = fs.readFileSync('./socket.js', 'utf8')
+        const insertPosition = data.lastIndexOf('}')
+        const newData = data.slice(0, insertPosition) + caseCode + '\n\n' + data.slice(insertPosition)
+        fs.writeFileSync('./socket.js', newData)
+      },
+      delete: (caseName) => {
+        const data = fs.readFileSync('./socket.js', 'utf8')
+        const caseRegex = new RegExp(`case\s*["\']${caseName}["\']\s*:\s*{[\s\S]*?}\s*break\s*;?`, 'gi')
+        const newData = data.replace(caseRegex, '')
+        if (newData === data) {
+          throw new Error(`Case "${caseName}" not found.`)
+        }
+        fs.writeFileSync('./socket.js', newData)
+      },
+      list: () => {
+        const data = fs.readFileSync('./socket.js', 'utf8')
+        const casePattern = /case\s+['"]([^'"]+)['"]/g
+        const matches = []
+        let match
+        while ((match = casePattern.exec(data)) !== null) {
+          matches.push(match[1])
+        }
+        return matches.join('\n')
+      }
+    }
+
+    const makeStickerFromUrl = async (url, sock, m) => {
+      try {
+        const response = await fetch(url)
+        const buffer = await response.buffer()
+        await sock.sendImageAsSticker(m.chat, buffer, m, {
+          packname: global.packname,
+          author: global.author
+        })
+      } catch (error) {
+        console.error('Sticker creation error:', error)
+        m.reply('❌ Erreur lors de la création du sticker')
+      }
+    }
 
     // Fonction de redimensionnement avec jimp
     const jimp = require("jimp")
@@ -471,6 +596,25 @@ module.exports = async (X, m) => {
       return plugins
     }
 
+    // Fonction pour obtenir toutes les commandes des plugins
+    const getPluginCommands = () => {
+      const plugins = loadPlugins(path.resolve(__dirname, "./plugin"))
+      let allCommands = {}
+      
+      plugins.forEach(plugin => {
+        if (plugin.command && Array.isArray(plugin.command)) {
+          plugin.command.forEach(cmd => {
+            allCommands[cmd] = {
+              name: cmd,
+              file: plugin.filePath ? path.basename(plugin.filePath, '.js') : 'unknown'
+            }
+          })
+        }
+      })
+      
+      return allCommands
+    }
+
     // Chargement et exécution des plugins
     const plugins = loadPlugins(path.resolve(__dirname, "./plugin"))
     const context = {
@@ -521,6 +665,32 @@ module.exports = async (X, m) => {
     // Test de réponse du bot sans préfixe
     if (budy.match && ["bot"].includes(budy) && !isCmd) {
       reply(`bot en ligne ✅`)
+    }
+
+    // Réponse à "maria" sans préfixe
+    if (budy && budy.toLowerCase() === "maria" && !isCmd) {
+      let text = '> _Maria... loves me but I love her ... she is my all .. i am gratfull being with her_ .... ';
+      m.reply(text);
+
+      await sock.sendMessage(m.chat, {
+        text: text,
+        contextInfo: {
+          forwardedNewsletterMessageInfo: {
+            newsletterJid: '120363400575205721@newsletter',
+            serverMessageId: 2,
+            newsletterName: `${global.botname}`
+          },
+          externalAdReply: {
+            showAdAttribution: false,
+            title: `${global.botname} - BLOOMING LOVE`,
+            body: `confession ... I (Raven) know`,
+            mediaType: 1,
+            renderLargerThumbnail: true,
+            thumbnailUrl: `https://img1.pixhost.to/images/8395/637002757_jarroffc.jpg`,
+            sourceUrl: `https://github.com/hhhisoka-bot`
+          }
+        }
+      }, { quoted: m });
     }
 
     //━━━━━━━━━━━━━━━━━━━━━━━━//
@@ -603,12 +773,12 @@ ${waktuucapan}
 │ 📋 **TOUS LES MENUS** │
 └──────────────────┘
 
-▢ .menu1 - 👤 Owner Menu
-▢ .menu2 - ℹ️ Info Menu  
-▢ .menu3 - ⬇️ Download Menu
-▢ .menu4 - 🎮 Fun Menu
-▢ .menu5 - 😊 Reactions Menu
-▢ .menu6 - 🛠️ Tools Menu
+▢ .owner - 👤 Owner Menu
+▢ .info - ℹ️ Info Menu  
+▢ .downloader - ⬇️ Download Menu
+▢ .fun - 🎮 Fun Menu
+▢ .reactions - 😊 Reactions Menu
+▢ .tools - 🛠️ Tools Menu
 
 ┌──────────────────┐
 │ 🚀 **RACCOURCIS** │
@@ -625,7 +795,7 @@ ${waktuucapan}
 │ ⚡ **${botname}** │
 └──────────────────┘
 
-💡 *Tape .menu[numéro] pour un menu spécifique*
+💡 *Utilise .nomduMenu pour un menu spécifique*
 `.trim()
           }
 
@@ -1687,13 +1857,13 @@ ${waktuucapan}
           const response = await X.groupInviteCode(m.chat)
           X.sendText(
             m.chat,
-            `🔗 *Lien du Groupe :* ${groupMetadata.subject}\n\nhttps://chat.whatsapp.com/${response}\n\nLe lien du groupe a été envoyé en privé`,
+            `🔗 *Lien du Groupe :* ${groupMetadata?.subject || 'Groupe'}\n\nhttps://chat.whatsapp.com/${response}\n\nLe lien du groupe a été envoyé en privé`,
             m,
             { detectLink: true },
           )
           X.sendText(
             m.sender,
-            `🔗 *Lien du Groupe :* ${groupMetadata.subject}\n\nhttps://chat.whatsapp.com/${response}`,
+            `🔗 *Lien du Groupe :* ${groupMetadata?.subject || 'Groupe'}\n\nhttps://chat.whatsapp.com/${response}`,
             m,
             { detectLink: true },
           )
@@ -2807,8 +2977,7 @@ ${waktuucapan}
       }
       break;
 
-      // ===== MENU 1 - OWNER =====
-      case "menu1": {
+      case "owner": {
         const menuImage = "https://files.catbox.moe/pkmiz6.jpg";
         const menuText = `
 ┌──────────────────┐
@@ -2837,8 +3006,7 @@ ${waktuucapan}
       }
       break;
 
-      // ===== MENU 2 =====  
-      case "menu2": {
+      case "info": {
         const menuImage = "https://files.catbox.moe/3w0llo.jpg";
         const menuText = `
 ┌──────────────────┐
@@ -2865,8 +3033,7 @@ ${waktuucapan}
       }
       break;
 
-      // ===== MENU 3 - DOWNLOAD =====
-      case "menu3": {
+      case "downloader": {
         const menuImage = "https://files.catbox.moe/k3xvf0.jpg";
         const menuText = `
 ┌──────────────────┐
@@ -2895,8 +3062,7 @@ ${waktuucapan}
       }
       break;
 
-      // ===== MENU 4 - FUN =====
-      case "menu4": {
+      case "fun": {
         const menuImage = "https://files.catbox.moe/pkmiz6.jpg";
         const menuText = `
 ┌──────────────────┐
@@ -2926,8 +3092,7 @@ ${waktuucapan}
       }
       break;
 
-      // ===== MENU 5 - REACTIONS =====
-      case "menu5": case "reactions": {
+      case "reactions": {
         const menuImage = "https://files.catbox.moe/3w0llo.jpg";
         const menuText = `
 ┌──────────────────┐
@@ -2957,8 +3122,7 @@ ${waktuucapan}
       }
       break;
 
-      // ===== MENU 6 - TOOLS =====
-      case "menu6": case "tools": {
+      case "tools": {
         const menuImage = "https://files.catbox.moe/k3xvf0.jpg";
         const menuText = `
 ┌──────────────────┐
@@ -3840,6 +4004,688 @@ ${waktuucapan}
           }
         } catch (error) {
           reply("❌ Erreur lors de la recherche manhwa");
+        }
+      }
+      break;
+
+      // ===== PING COMMAND =====
+      case "ping": case "uptime": {
+        let timestamp = speed()
+        let latensi = speed() - timestamp
+        let tio = await nou.os.oos()
+        var tot = await nou.drive.info()
+        let respon = `*—VPS Server Information 🖥️*
+- *Platform :* ${nou.os.type()}
+- *Total RAM :* ${formatp(os.totalmem())}
+- *Total Disk :* ${tot.totalGb} GB
+- *Total CPU :* ${os.cpus().length} Core
+- *VPS Runtime :* ${runtime(os.uptime())}
+
+*—Panel Server Information 🌐*
+- *Response Speed :* ${latensi.toFixed(4)} seconds
+- *Bot Runtime :* ${runtime(process.uptime())}`
+        await m.reply(respon)
+      }
+      break
+
+      // ===== ANTI DELETE =====
+      case 'antidelete': case 'antidel': {
+        if (!m.isGroup) return m.reply("⚠️ Cette commande ne fonctionne que dans les groupes !");
+        
+        if (!text) return m.reply("🚫 *ANTI-DELETE*\n\n*Usage:*\n.antidelete on - Activer l'anti-delete\n.antidelete off - Désactiver l'anti-delete\n.antidelete status - Voir le statut");
+        
+        const action = text.toLowerCase();
+        
+        switch(action) {
+          case 'on':
+          case 'enable':
+          case 'activer':
+            global.db = global.db || {};
+            global.db.groups = global.db.groups || {};
+            global.db.groups[m.chat] = global.db.groups[m.chat] || {};
+            global.db.groups[m.chat].antidelete = true;
+            if (fs.existsSync('./librairy/database/database.json')) {
+              fs.writeFileSync('./librairy/database/database.json', JSON.stringify(global.db, null, 2));
+            }
+            m.reply("✅ Anti-delete activé pour ce groupe !\n\n🔰 Les messages supprimés seront détectés et restaurés automatiquement.");
+            break;
+            
+          case 'off':
+          case 'disable':  
+          case 'désactiver':
+            global.db = global.db || {};
+            global.db.groups = global.db.groups || {};
+            global.db.groups[m.chat] = global.db.groups[m.chat] || {};
+            global.db.groups[m.chat].antidelete = false;
+            if (fs.existsSync('./librairy/database/database.json')) {
+              fs.writeFileSync('./librairy/database/database.json', JSON.stringify(global.db, null, 2));
+            }
+            m.reply("❌ Anti-delete désactivé pour ce groupe.\n\n⚠️ Les messages supprimés ne seront plus détectés.");
+            break;
+            
+          case 'status':
+          case 'statut':
+            const isEnabled = global.db?.groups?.[m.chat]?.antidelete || false;
+            m.reply(`🚫 *STATUT ANTI-DELETE*\n\n📊 *Groupe:* ${groupName || 'Groupe'}\n🔰 *Anti-Delete:* ${isEnabled ? '✅ Activé' : '❌ Désactivé'}\n\n${isEnabled ? '🛡️ Les messages supprimés sont surveillés' : '⚠️ Aucune surveillance des suppressions'}`);
+            break;
+            
+          default:
+            m.reply("❌ Action non reconnue\n\n*Actions disponibles:*\n• on/enable/activer\n• off/disable/désactiver\n• status/statut");
+        }
+      }
+      break;
+
+      // ===== MARIA COMMAND (sans préfixe) =====
+      case "maria": {
+        let text = '> _Maria... loves me but I love her ... she is my all .. i am gratfull being with her_ .... ';
+        m.reply(text);
+
+        await sock.sendMessage(m.chat, {
+          text: text,
+          contextInfo: {
+            forwardedNewsletterMessageInfo: {
+              newsletterJid: '120363400575205721@newsletter',
+              serverMessageId: 2,
+              newsletterName: `${global.botname}`
+            },
+            externalAdReply: {
+              showAdAttribution: false,
+              title: `${global.botname} - BLOOMING LOVE`,
+              body: `confession ... I (Raven) know`,
+              mediaType: 1,
+              renderLargerThumbnail: true,
+              thumbnailUrl: `https://img1.pixhost.to/images/8395/637002757_jarroffc.jpg`,
+              sourceUrl: `https://github.com/hhhisoka-bot`
+            }
+          }
+        }, { quoted: m });
+      }
+      break
+
+      // ===== SET PROFILE PICTURE =====
+      case "setpp": {
+        if (!isOwner) return m.reply("This command is only for the owner.");
+        if (!m.quoted) return m.reply("Reply to an image with this command to set profile picture!");
+        
+        try {
+          const media = await sock.downloadAndSaveMediaMessage(m.quoted);
+          const imageBuffer = fs.readFileSync(media);
+          
+          await sock.updateProfilePicture(botNumber, imageBuffer);
+          await m.reply("Profile picture set successfully!");
+          
+          fs.unlinkSync(media);
+        } catch (error) {
+          console.error(error);
+          await m.reply("Failed to set profile picture. Make sure you replied to an image and try again.");
+        }
+      }
+      break
+
+      // ===== DELETE PROFILE PICTURE =====
+      case "delpp": {
+        if (!isOwner) return m.reply("This command is only for the owner.");
+        try {
+          await sock.removeProfilePicture(sock.user.id);
+          m.reply("Success Delete Profile Picture");
+        } catch (error) {
+          m.reply("Failed to delete profile picture.");
+        }
+      }
+      break;
+
+      // ===== CASE MANAGEMENT =====
+      case "getcase": { 
+        if (!isOwner) return reply("This command is only for the owner.")
+        if (!text) return reply(example("caseName"));
+        try {
+          let hasil = Case.get(text);
+          reply(`✅ Case found:\n\n${hasil}`);
+        } catch (e) {
+          reply(e.message);
+        }
+      }
+      break;
+
+      case "addcase": {
+        if (!isOwner) return reply("This command is only for the owner.")
+        if (!text) return reply(example(`case "caseName": { ... }`));
+        try {
+          Case.add(text);
+          reply("✅ Case successfully added.");
+        } catch (e) {
+          reply(e.message);
+        }
+      }
+      break;
+
+      case "delcase": {
+        if (!isOwner) return reply("This command is only for the owner.")
+        if (!text) return reply(example("caseName"));
+        try {
+          Case.delete(text);
+          reply(`✅ Case "${text}" successfully deleted.`);
+        } catch (e) {
+          reply(e.message);
+        }
+      }
+      break;
+
+      case "listcase": case "all": {
+        try {
+          reply("📜 Case List:\n\n" + Case.list());
+        } catch (e) {
+          reply(e.message);
+        }
+      }
+      break;
+
+      // ===== BACKUP SCRIPT =====
+      case "backupsc":
+      case "bck":
+      case "backup": { 
+        if (!isOwner) return m.reply("🔒 Cette commande est réservée au propriétaire.");
+        
+        try {
+          const backupMsg = `
+┌──────────────────┐
+│ 💾 **BACKUP SYSTEM** │
+└──────────────────┘
+
+■ Préparation du backup...
+■ Nettoyage des fichiers temporaires...
+■ Compression en cours...`;
+          
+          await m.reply(backupMsg);
+          
+          const tmpDir = "./librairy/database/Sampah";
+          if (fs.existsSync(tmpDir)) {
+            const files = fs.readdirSync(tmpDir).filter(f => !f.endsWith(".js") && !f.includes("© Maria"));
+            for (let file of files) {
+              try {
+                fs.unlinkSync(`${tmpDir}/${file}`);
+              } catch (e) {
+                console.log(`Could not delete ${file}:`, e.message);
+              }
+            }
+          }
+
+          const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+          const name = `${global.botname.replace(/\s+/g, "_")}_Backup_${timestamp}`;
+          const exclude = ["node_modules", "session", "package-lock.json", "yarn.lock", ".npm", ".cache", ".git", "*.zip"];
+          
+          const allFiles = fs.readdirSync(".");
+          const filesToZip = allFiles.filter(f => {
+            for (let excl of exclude) {
+              if (excl.includes('*')) {
+                const pattern = excl.replace('*', '');
+                if (f.includes(pattern)) return false;
+              } else if (f === excl) {
+                return false;
+              }
+            }
+            return true;
+          });
+
+          if (!filesToZip.length) {
+            return m.reply("❌ Aucun fichier disponible pour le backup.");
+          }
+
+          console.log("Files to backup:", filesToZip);
+          
+          try {
+            execSync(`zip -r "${name}.zip" ${filesToZip.map(f => `"${f}"`).join(" ")}`, { cwd: process.cwd() });
+          } catch (zipError) {
+            console.error("Zip creation error:", zipError);
+            return m.reply("❌ Erreur lors de la création du fichier ZIP.");
+          }
+
+          if (!fs.existsSync(`./${name}.zip`)) {
+            return m.reply("❌ Échec de la création du fichier ZIP.");
+          }
+          
+          const stats = fs.statSync(`./${name}.zip`);
+          const fileSizeInMB = (stats.size / (1024 * 1024)).toFixed(2);
+          
+          const successMsg = `
+┌──────────────────┐
+│ ✅ **BACKUP SUCCESS** │
+└──────────────────┘
+
+■ **Fichiers inclus:** ${filesToZip.length}
+■ **Taille:** ${fileSizeInMB} MB
+■ **Envoi en cours...**
+
+┌──────────────────┐
+│ ⚡ **${global.botname}** │
+└──────────────────┘`;
+          
+          await m.reply(successMsg);
+
+          await sock.sendMessage(m.sender, {
+            document: fs.readFileSync(`./${name}.zip`),
+            fileName: `${name}.zip`,
+            mimetype: "application/zip",
+            caption: `💾 **Script Backup Complet**\n\n📅 **Date:** ${new Date().toLocaleString('fr-FR')}\n📊 **Version:** ${global.botver}\n💼 **Taille:** ${fileSizeInMB} MB\n\n_Le backup de votre bot est prêt !_`
+          }, { quoted: m });
+
+          fs.unlinkSync(`./${name}.zip`);
+
+          if (m.chat !== m.sender) {
+            m.reply("✅ Le script du bot a été envoyé dans votre chat privé.");
+          }
+          
+        } catch (err) {
+          console.error("Backup Error:", err);
+          const errorMsg = `
+┌──────────────────┐
+│ ❌ **BACKUP ERROR** │
+└──────────────────┘
+
+⚠️ Erreur lors du backup
+
+**Détails:** ${err.message}
+
+┌──────────────────┐
+│ ⚡ **${global.botname}** │
+└──────────────────┘`;
+          
+          m.reply(errorMsg);
+        }
+      }
+      break;
+
+      // ===== ANIME WALLPAPERS =====
+      case 'akira': case 'akiyama': case 'anna': case 'asuna': case 'ayuzawa': case 'boruto': case 'chiho': case 'chitoge': case 'deidara': case 'erza': case 'elaina': case 'eba': case 'emilia': case 'hestia': case 'hinata': case 'inori': case 'isuzu': case 'itachi': case 'itori': case 'kaga': case 'kagura': case 'kaori': case 'keneki': case 'kotori': case 'kurumi': case 'madara': case 'mikasa': case 'miku': case 'minato': case 'naruto': case 'nezuko': case 'sagiri': case 'sasuke': case 'sakura': {
+        try {
+          const response = await fetch(`https://raw.githubusercontent.com/Guru322/api/Guru/BOT-JSON/anime-${command}.json`);
+          const data = await response.json();
+          const randomImage = data[Math.floor(data.length * Math.random())];
+          
+          await sock.sendMessage(m.chat, {
+            image: { url: randomImage },
+            caption: `🎌 *Wallpaper ${command.toUpperCase()}*\n\n📱 *Character:* ${command}\n🎨 *Type:* Anime Wallpaper\n⚡ *Bot:* ${global.botname}`
+          }, { quoted: m });
+        } catch (error) {
+          console.error(`Error fetching ${command} wallpaper:`, error);
+          m.reply(`❌ Erreur lors du chargement du wallpaper ${command}`);
+        }
+      }
+      break
+
+      // ===== COUPLE PROFILE PICTURES =====
+      case 'couplepp': case 'ppcouple': {
+        try {
+          const response = await fetch('https://raw.githubusercontent.com/KazukoGans/database/main/anime/ppcouple.json');
+          const data = await response.json();
+          const randomCouple = data[Math.floor(Math.random() * data.length)];
+          
+          const maleBuffer = await (await fetch(randomCouple.cowo)).buffer();
+          await sock.sendMessage(m.chat, {
+            image: maleBuffer,
+            caption: '♂️ *Profile Picture - Male*'
+          }, { quoted: m });
+          
+          const femaleBuffer = await (await fetch(randomCouple.cewe)).buffer();
+          await sock.sendMessage(m.chat, {
+            image: femaleBuffer,
+            caption: '♀️ *Profile Picture - Female*'
+          }, { quoted: m });
+          
+        } catch (error) {
+          console.error('Error fetching couple profile pictures:', error);
+          m.reply('❌ Erreur lors du chargement des photos de profil de couple');
+        }
+      }
+      break
+
+      // ===== ANIME QUOTE =====
+      case 'animequote': {
+        try {
+          const response = await fetch('https://some-random-api.com/animu/quote');
+          if (!response.ok) throw await response.text();
+          
+          const quoteData = await response.json();
+          const { sentence, character, anime } = quoteData;
+          
+          const quoteMessage = `💬 *Citation Anime*\n\n"${sentence}"\n\n👤 *Personnage:* \`\`\`${character}\`\`\`\n🎌 *Anime:* \`\`\`${anime}\`\`\`\n\n🤖 *${global.botname}*`;
+          
+          await sock.sendMessage(m.chat, {
+            text: quoteMessage
+          }, { quoted: m });
+          
+        } catch (error) {
+          console.error('Anime quote error:', error);
+          m.reply('❌ Erreur lors de la récupération de la citation anime');
+        }
+      }
+      break
+
+      // ===== STICKER COMMANDS =====
+      case "sticker": case "stiker": case "sgif": case "s": {
+        if (!/image|video/.test(mime)) return m.reply("Send the image!")
+        if (/video/.test(mime)) {
+          if ((qmsg).seconds > 15) return m.reply("Video duration is maximum 15 seconds!")
+        }
+        var media = await sock.downloadAndSaveMediaMessage(qmsg)
+        await sock.sendImageAsSticker(m.chat, media, m, {packname: ` ${global.ownername}`})
+        await fs.unlinkSync(media)
+      }
+      break
+
+      case 'oi': {
+        if (!quoted) return reply(`Reply image/video with caption ${prefix + command}`);
+        try {
+          if (/image/.test(mime)) {
+            const media = await quoted.download();
+            const imageUrl = `data:${mime};base64,${media.toString('base64')}`;
+            await makeStickerFromUrl(imageUrl, sock, m);
+          } else if (/video/.test(mime)) {
+            if ((quoted?.msg || quoted)?.seconds > 10) return reply('Video duration is maximum 10 seconds!')
+            const media = await quoted.download();
+            const videoUrl = `data:${mime};base64,${media.toString('base64')}`;
+            await makeStickerFromUrl(videoUrl, sock, m);
+          } else {
+            return reply('Send image/video with caption .s (video duration 1-10 seconds)');
+          }
+        } catch (error) {
+          console.error(error);
+          return reply('An error occurred while processing the media. Please try again.');
+        }
+      }
+      break
+
+      // ===== TIKTOK DOWNLOADER =====
+      case 'tiktok': case 'tt': {
+        if (!text) return m.reply(`Envoyez l'URL TikTok\nExemple: ${m.prefix + command} https://tiktok.com/@user/video/xxx`);
+        
+        if (!text.includes('tiktok.com')) return m.reply("Veuillez envoyer une URL TikTok valide !");
+        
+        try {
+          m.reply("⏳ Téléchargement TikTok en cours...");
+          
+          const response = await fetch(`https://tikwm.com/api/?url=${encodeURIComponent(text)}`);
+          const data = await response.json();
+          
+          if (data.code === 0 && data.data) {
+            const result = data.data;
+            let caption = `🎵 *TikTok Video*\n\n`;
+            if (result.title) caption += `📌 *Titre:* ${result.title}\n`;
+            if (result.author) caption += `👤 *Auteur:* @${result.author.unique_id}\n`;
+            if (result.duration) caption += `⏱️ *Durée:* ${result.duration}s\n`;
+            caption += `❤️ *Likes:* ${result.digg_count || 0}\n`;
+            caption += `💬 *Commentaires:* ${result.comment_count || 0}\n`;
+            caption += `🔄 *Partages:* ${result.share_count || 0}\n`;
+            caption += `\n_Powered by ${global.botname}_`;
+            
+            if (result.play) {
+              await sock.sendMessage(m.chat, {
+                video: { url: result.play },
+                caption: caption
+              }, { quoted: m });
+            } else if (result.wmplay) {
+              await sock.sendMessage(m.chat, {
+                video: { url: result.wmplay },
+                caption: caption + "\n\n⚠️ _Version avec watermark_"
+              }, { quoted: m });
+            } else {
+              throw new Error("Aucun lien vidéo disponible");
+            }
+          } else {
+            throw new Error("Impossible de télécharger cette vidéo TikTok");
+          }
+        } catch (error) {
+          console.error("TikTok download error:", error);
+          m.reply(`❌ Service TikTok temporairement indisponible\n\n🔄 *Solutions alternatives:*\n• Utilisez yt-dlp ou des outils externes\n• Réessayez dans quelques minutes\n• Vérifiez que l'URL est correcte\n\n_L'équipe technique travaille sur ce problème_`);
+        }
+      }
+      break;
+
+      // ===== MEDIA CONVERSIONS =====
+      case "tourl": { 
+        if (!/image/.test(mime)) return m.reply("Send/reply the image!");
+        try {
+          let mediaPath = await sock.downloadAndSaveMediaMessage(qmsg);
+          const service = new ImageUploadService('pixhost.to');
+          let buffer = fs.readFileSync(mediaPath);
+          let { directLink } = await service.uploadFromBinary(buffer, 'jarroffc.png');
+          await sock.sendMessage(m.chat, { text: directLink }, { quoted: m });
+          await fs.unlinkSync(mediaPath);
+        } catch (err) {
+          console.error("Tourl Error:", err);
+          m.reply("An error occurred while converting media to URL.");
+        }
+      }
+      break;
+
+      case "rvo":
+      case "readvo":
+      case 'readviewonce':
+      case 'readviewoncemessage': 
+      case 'vv': {
+        const { downloadContentFromMessage } = require("@whiskeysockets/baileys");
+        
+        const quoted = m.message?.extendedTextMessage?.contextInfo?.quotedMessage;
+
+        const mediaType = quoted?.imageMessage ? "image"
+                        : quoted?.videoMessage ? "video"
+                        : null;
+
+        if (!mediaType) {
+          return sock.sendMessage(m.chat, {
+            text: "❌ Please *reply to a view once image or short video* to retrieve."
+          }, { quoted: m });
+        }
+
+        try {
+          const stream = await downloadContentFromMessage(
+            mediaType === "image" ? quoted.imageMessage : quoted.videoMessage,
+            mediaType
+          );
+
+          let buffer = Buffer.from([]);
+          for await (const chunk of stream) {
+            buffer = Buffer.concat([buffer, chunk]);
+          }
+
+          await sock.sendMessage(m.chat, {
+            [mediaType]: buffer,
+            caption: `💥 Here's your removed view-once ${mediaType}`
+          }, {
+            quoted: {
+              key: {
+                fromMe: false,
+                participant: "0@s.whatsapp.net",
+                remoteJid: m.chat
+              },
+              message: {
+                conversation: "🤺 VIEW ONCE FETCHED"
+              }
+            }
+          });
+
+        } catch (err) {
+          console.error("❌ View once retrieval error:", err);
+          await sock.sendMessage(m.chat, {
+            text: "⚠️ Failed to retrieve view once."
+          }, { quoted: m });
+        }
+      }
+      break
+
+      case 'qc': {
+        if (!q) return m.reply(`Send command with text. ${m.prefix + command} ${pushname}`);
+        let obj = {
+          type: 'quote',
+          format: 'png',
+          backgroundColor: '#ffffff',
+          width: 512,
+          height: 768,
+          scale: 2,
+          messages: [
+            {
+              entities: [],
+              avatar: true,
+              from: {
+                id: 1,
+                name: `${pushname}`,
+                photo: { 
+                  url: await sock.profilePictureUrl(m.sender, "image").catch(() => 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png?q=60'),
+                }
+              },
+              text: `${q}`,
+              replyMessage: {},
+            },
+          ],
+        };
+        let response = await axios.post('https://bot.lyo.su/quote/generate', obj, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        let buffer = Buffer.from(response.data.result.image, 'base64');
+        sock.sendImageAsSticker(m.chat, buffer, m, { packname: `${global.packname}`, author: `${global.author}` });
+      }
+      break;
+
+      // ===== STATUS MANAGEMENT =====
+      case 'setstatus':
+      case 'status': {
+        if (!isOwner) return m.reply("🔒 Cette commande est réservée au propriétaire.");
+        
+        if (!text) {
+          return m.reply(`*🎭 Gestion du Statut WhatsApp:*\n\n*Commandes disponibles:*\n• .status online - Toujours en ligne\n• .status typing - Toujours en train d'écrire\n• .status recording - Toujours en enregistrement\n• .status pause - En pause\n• .status offline - Hors ligne permanent\n• .status auto - Basculer automatique\n• .status stop - Arrêter le statut continu\n\n*Status actuel:* ${global.continuousPresence ? global.currentPresence : "Aucun"}`);
+        }
+        
+        const action = text.toLowerCase().trim();
+        
+        try {
+          switch (action) {
+            case 'online':
+              global.currentPresence = 'available';
+              global.continuousPresence = true;
+              await sock.sendPresenceUpdate('available', m.chat);
+              m.reply("✅ *Statut Permanent:* En ligne\n\n📡 Le bot restera toujours en ligne");
+              break;
+            
+            case 'typing':
+              global.currentPresence = 'composing';
+              global.continuousPresence = true;
+              global.presenceInterval = setInterval(async () => {
+                if (global.continuousPresence && global.currentPresence === 'composing') {
+                  try {
+                    await sock.sendPresenceUpdate('composing', m.chat);
+                  } catch (e) {}
+                }
+              }, 10000);
+              await sock.sendPresenceUpdate('composing', m.chat);
+              m.reply("✅ *Statut Permanent:* En train d'écrire...\n\n⌨️ Le bot apparaîtra toujours en train d'écrire");
+              break;
+            
+            case 'recording':
+              global.currentPresence = 'recording';
+              global.continuousPresence = true;
+              global.presenceInterval = setInterval(async () => {
+                if (global.continuousPresence && global.currentPresence === 'recording') {
+                  try {
+                    await sock.sendPresenceUpdate('recording', m.chat);
+                  } catch (e) {}
+                }
+              }, 10000);
+              await sock.sendPresenceUpdate('recording', m.chat);
+              m.reply("✅ *Statut Permanent:* Enregistrement audio...\n\n🎤 Le bot apparaîtra toujours en enregistrement");
+              break;
+            
+            case 'stop':
+              global.continuousPresence = false;
+              global.currentPresence = null;
+              if (global.presenceInterval) {
+                clearInterval(global.presenceInterval);
+                global.presenceInterval = null;
+              }
+              await sock.sendPresenceUpdate('available', m.chat);
+              m.reply("🛑 *Statut continu arrêté*\n\nRetour au statut normal");
+              break;
+            
+            default:
+              m.reply("❌ Option invalide.\n\nUtilisez: online, typing, recording, stop");
+          }
+        } catch (error) {
+          console.error("Status Error:", error);
+          m.reply("❌ Erreur lors de la mise à jour du statut");
+        }
+      }
+      break
+
+      // ===== MEDIA CONVERSIONS EXTRA =====
+      case 'tovn': {
+        if (!/video/.test(mime) && !/audio/.test(mime)) return m.reply(`Reply media with caption ${m.prefix + command}`);
+        if (!quoted) return m.reply(`Reply video/vn with caption ${m.prefix + command}`);
+        
+        try {
+          let media = await quoted.download();
+          
+          const tempFile = `./librairy/database/Sampah/temp_${Date.now()}.mp3`;
+          
+          if (!fs.existsSync('./librairy/database/Sampah')) {
+            fs.mkdirSync('./librairy/database/Sampah', { recursive: true });
+          }
+          
+          fs.writeFileSync(tempFile, media);
+          
+          const outputFile = `./librairy/database/Sampah/output_${Date.now()}.mp3`;
+          
+          exec(`ffmpeg -i ${tempFile} -vn -ab 128k -ar 44100 -f mp3 ${outputFile}`, async (err) => {
+            if (err) {
+              console.error('FFmpeg error:', err);
+              return m.reply("Erreur lors de la conversion en note vocale.");
+            }
+            
+            try {
+              const audioBuffer = fs.readFileSync(outputFile);
+              await sock.sendMessage(m.chat, { audio: audioBuffer, mimetype: 'audio/mpeg', ptt: true }, { quoted: m });
+              
+              fs.unlinkSync(tempFile);
+              fs.unlinkSync(outputFile);
+            } catch (sendError) {
+              console.error('Send error:', sendError);
+              m.reply("Erreur lors de l'envoi de la note vocale.");
+            }
+          });
+        } catch (error) {
+          console.error('Tovn error:', error);
+          m.reply("Erreur lors de la conversion en note vocale.");
+        }
+      }
+      break;
+
+      case 'toimg': {
+        if (!/webp/.test(mime)) return m.reply("🔖 Répondez à un sticker avec cette commande !");
+        
+        try {
+          m.reply("🔄 Conversion en image...");
+          let media = await sock.downloadAndSaveMediaMessage(quoted);
+          
+          const outputBuffer = await sharp(media)
+            .png()
+            .toBuffer();
+          
+          await sock.sendMessage(m.chat, { 
+            image: outputBuffer,
+            caption: "✅ Sticker converti en image !"
+          }, { quoted: m });
+          
+          try {
+            if (fs.existsSync(media)) {
+              fs.unlinkSync(media);
+            }
+          } catch (cleanupError) {
+            console.error("Cleanup error:", cleanupError);
+          }
+          
+        } catch (error) {
+          console.error("ToImg Error:", error);
+          m.reply("❌ Impossible de convertir ce sticker en image. Assurez-vous de répondre à un sticker valide.");
         }
       }
       break;

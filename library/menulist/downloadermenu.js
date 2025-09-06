@@ -1,48 +1,47 @@
-//━━━━━━━━━━━━━━━━━━━━━━━━//
-// Menu Téléchargeur - Style Hisoka & Otaku
-//━━━━━━━━━━━━━━━━━━━━━━━━//
-
 module.exports = `
 ╭─────────────────────╮
-│  📥 DOWNLOADS 📥
+│  📥 **DOWNLOADS** 📥
 ╰─────────────────────╯
 
-*"Collecte tes trésors numériques ♠️"*
+_"Collecte tes trésors numériques ♠️"_
 
-┌─⊷ 🎵 *MUSIQUE & AUDIO*
+┌─⊷ 🎵 _**MUSIQUE & AUDIO**_
 │
-├─⊷ 🎶 \`.play\` - Jouer musique
-├─⊷ 🎵 \`.ytmp3\` - YouTube MP3
-├─⊷ 🎵 \`.ytaudio\` - YouTube Audio
-├─⊷ 🎧 \`.spotify\` - Spotify
-├─⊷ 🔊 \`.soundcloud\` - SoundCloud
+├─⊷ 🎶 \`.play\` - _Jouer musique_
+├─⊷ 🎵 \`.ytmp3\` - _YouTube MP3_
+├─⊷ 🎵 \`.ytaudio\` - _YouTube Audio_
+├─⊷ 🎧 \`.spotify\` - _Spotify_
+├─⊷ 🔊 \`.soundcloud\` - _SoundCloud_
 │
-└─⊷ *"La mélodie de la victoire ♪"*
+└─⊷ _"La mélodie de la victoire ♪"_
 
-┌─⊷ 🎬 *VIDÉOS & FILMS*
+┌─⊷ 🎬 _**VIDÉOS & FILMS**_
 │
-├─⊷ 📹 \`.ytmp4\` - YouTube MP4
-├─⊷ 🎭 \`.tiktok\` - TikTok
-├─⊷ 📱 \`.instagram\` - Instagram
-├─⊷ 📘 \`.facebook\` - Facebook
-├─⊷ 🐦 \`.twitter\` - Twitter/X
-├─⊷ 🧵 \`.threads\` - Threads
-├─⊷ ✂️ \`.capcut\` - CapCut
+├─⊷ 📹 \`.ytmp4\` - _YouTube MP4_
+├─⊷ 🎭 \`.tiktok\` - _TikTok_
+├─⊷ 📱 \`.instagram\` - _Instagram_
+├─⊷ 📎 \`.tourl\` - _Image vers URL_
+├─⊷ 📎 \`.rvo\` - _Read view once_
+├─⊷ 📎 \`.ss\` - _Screenshot_
 │
-└─⊷ *"Chaque vidéo raconte une histoire ♦️"*
+└─⊷ _"Chaque vidéo raconte une histoire ♦️"_
 
-┌─⊷ 📁 *FICHIERS & DOCS*
+┌─⊷ 📁 _**FICHIERS & CONVERSIONS**_
 │
-├─⊷ 🔥 \`.mediafire\` - MediaFire
-├─⊷ 📎 \`.mfdl\` - Téléchargeur universel
+├─⊷ 🔥 \`.tovn\` - _Vers note vocale_
+├─⊷ 📎 \`.toimg\` - _Sticker vers image_
+├─⊷ 📎 \`.qc\` - _Citation sticker_
 │
-└─⊷ *"Les documents... si précieux ♣️"*
+└─⊷ _"Les documents... si précieux ♣️"_
 
-┌─⊷ 🖼️ *IMAGES & ARTS*
+┌─⊷ 🖼️ _**WALLPAPERS ANIME**_
 │
-├─⊷ 📌 \`.pinterest\` - Pinterest
+├─⊷ 🌸 \`.akira\` - _Wallpaper Akira_
+├─⊷ 🌸 \`.naruto\` - _Wallpaper Naruto_
+├─⊷ 🌸 \`.sasuke\` - _Wallpaper Sasuke_
+├─⊷ 🌸 \`.hinata\` - _Wallpaper Hinata_
+├─⊷ 🌸 \`.couplepp\` - _Photos couple_
 │
-└─⊷ *"L'art... expression de l'âme ♥️"*
-
+└─⊷ _"L'art... expression de l'âme ♥️"_
 
 `

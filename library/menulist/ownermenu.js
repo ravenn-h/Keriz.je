@@ -1,46 +1,41 @@
-//━━━━━━━━━━━━━━━━━━━━━━━━//
-// Menu Propriétaire - Style Hisoka & Otaku
-//━━━━━━━━━━━━━━━━━━━━━━━━//
-
 module.exports = `
 ╭─────────────────────╮
-│  👹 MASTER 👹  
+│  👹 **MASTER** 👹  
 ╰─────────────────────╯
 
-*"Seuls les élus peuvent utiliser ces pouvoirs ♠️"*
+_"Seuls les élus peuvent utiliser ces pouvoirs ♠️"_
 
-┌─⊷ ⚡ *CONTRÔLE SYSTÈME*
+┌─⊷ ⚡ _**CONTRÔLE SYSTÈME**_
 │
 ├─⊷ 🔒 \`.self
 ├─⊷ 🌐 \`.public
 ├─⊷ 🔄 \`.restart
+├─⊷ 🔧 \`.setpp
+├─⊷ 🗑️ \`.delpp
+├─⊷ 💾 \`.backupsc
 │
-└─⊷ *"Le contrôle absolu... délicieux ♦️"*
+└─⊷ _"Le contrôle absolu... délicieux ♦️"_
 
-┌─⊷ 🔌 *GESTION PLUGINS*
+┌─⊷ 🔌 _**GESTION PLUGINS**_
 │
-├─⊷ ➕ \`.addplugin
-├─⊷ ✏️ \`.cgplugin
-├─⊷ 🗑️ \`.rmplugin
-├─⊷ 📥 \`.getplugin
-├─⊷ 📋 \`.plugins
-├─⊷ 📊 \`.pluginstatus
+├─⊷ ➕ \`.addcase
+├─⊷ ✏️ \`.getcase
+├─⊷ 🗑️ \`.delcase
+├─⊷ 📋 \`.listcase
+├─⊷ 📊 \`.all
 │
-└─⊷ *"Mes extensions... mes atouts ♣️"*
+└─⊷ _"Mes extensions... mes atouts ♣️"_
 
-┌─⊷ 🛡️ *FONCTIONS SPÉCIALES*
+┌─⊷ 🛡️ _**FONCTIONS SPÉCIALES**_
 │
 ├─⊷ 👁️ \`.antiviewonce
 ├─⊷ 📖 \`.autoread
-├─⊷ 📢 \`.autoreadbc
-├─⊷ 📡 \`.broadcast
+├─⊷ 📢 \`.broadcast
+├─⊷ 🎭 \`.status
 │
-└─⊷ *"Pouvoirs interdits aux mortels ♥️"*
+└─⊷ _"Pouvoirs interdits aux mortels ♥️"_
 
-
-
-*"Ore wa MERILDA... soshite kimi wa?"*
-*(Je suis Hisoka... et toi, qui es-tu?)*
-
+*"Ore wa **VRUSH-MARIA**... soshite kimi wa?"*
+_*(Je suis Vrush-maria... et toi, qui es-tu?)*_
 
 `
