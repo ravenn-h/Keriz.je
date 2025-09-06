@@ -13,6 +13,7 @@ module.exports = `
 │
 ├─⊷ 🎶 \`.play\` - Jouer musique
 ├─⊷ 🎵 \`.ytmp3\` - YouTube MP3
+├─⊷ 🎵 \`.ytaudio\` - YouTube Audio
 ├─⊷ 🎧 \`.spotify\` - Spotify
 ├─⊷ 🔊 \`.soundcloud\` - SoundCloud
 │

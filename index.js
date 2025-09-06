@@ -12,7 +12,7 @@ const PhoneNumber = require('awesome-phonenumber')
 const FileType = require('file-type')
 const path = require('path')
 const fetch = require("node-fetch") 
-const { getBuffer, await } = require('./library/lib/myfunc')
+const { getBuffer } = require('./library/lib/myfunc')
 const { imageToWebp, imageToWebp3, videoToWebp, writeExifImg, writeExifImgAV, writeExifVid } = require('./library/lib/exif')
 //━━━━━━━━━━━━━━━━━━━━━━━━//
 const store = makeInMemoryStore({ logger: pino().child({ level: 'silent', stream: 'store' }) })
@@ -97,33 +97,33 @@ let reason = new Boom(lastDisconnect?.error)?.output.statusCode;
 if (reason === DisconnectReason.badSession) {
 console.log(`Fichier de session défaillant, veuillez supprimer le dossier AliceSession et tmp puis effectuer un nouveau jumelage`);
 X.sendMessage('6281543496975@s.whatsapp.net', {
-  text: `⚠️ MERILDA Déconnecté : ${reason}\nVeuillez vérifier le terminal ou réparer la session.`
+  text: `⚠️ Vrush-maria Déconnecté : ${reason}\nVeuillez vérifier le terminal ou réparer la session.`
 });
   } else if (reason === DisconnectReason.connectionClosed) {
 console.log("Connexion fermée, redémarrage en cours.....");
-AliceConnect();
+Merilda();
   } else if (reason === DisconnectReason.connectionLost) {
 console.log("Connexion perdue avec le serveur, redémarrage en cours...");
-AliceConnect();
+Merilda();
   } else if (reason === DisconnectReason.connectionReplaced) {
 console.log("Connexion remplacée, une nouvelle session a été ouverte, veuillez redémarrer le bot");
 X.sendMessage('2250101676111@s.whatsapp.net', {
-  text: `⚠️ MERILDA Déconnecté : ${reason}\nVeuillez vérifier le terminal ou réparer la session.`
+  text: `⚠️ Vrush-maria Déconnecté : ${reason}\nVeuillez vérifier le terminal ou réparer la session.`
 });
   } else if (reason === DisconnectReason.loggedOut) {
 console.log(`Appareil déconnecté, veuillez supprimer le dossier de session puis redémarrer le serveur.`);
 X.sendMessage('225010167611@s.whatsapp.net', {
-  text: `⚠️ MERILDA Déconnecté : ${reason}\nVeuillez vérifier le terminal ou réparer la session.`
+  text: `⚠️ Vrush-maria Déconnecté : ${reason}\nVeuillez vérifier le terminal ou réparer la session.`
 });
   } else if (reason === DisconnectReason.restartRequired) {
 console.log("Redémarrage du serveur....");
-AliceConnect();
+Merilda();
   } else if (reason === DisconnectReason.timedOut) {
 console.log("Délai de connexion dépassé, reconnexion en cours ...");
-AliceConnect();
+Merilda();
   } else {
 console.log(`Raison de déconnexion inconnue : ${reason}|${connection}`);
-AliceConnect();
+Merilda();
   }
 } else if (connection === "open") {      
 try {
@@ -131,7 +131,7 @@ X.newsletterFollow('120363400575205721@newsletter')
 } catch (e) {
 console.error("❌ Erreur lors du suivi du canal :", e);
 }
-X.sendMessage("2250101676111@s.whatsapp.net", {text: `MERILDA connecté avec succès ✅`})
+X.sendMessage("2250101676111@s.whatsapp.net", {text: `Vrush-maria connecté avec succès ✅`})
 console.log('[ Connecté ✅]' + JSON.stringify(X.user.id, null, 2));
 }
 });
@@ -168,13 +168,14 @@ X.sendFile = async (jid, path, filename = '', caption = '', quoted, ptt = false,
         if (/webp/.test(type.mime) || (/image/.test(type.mime) && options.asSticker)) mtype = 'sticker'
         else if (/image/.test(type.mime) || (/webp/.test(type.mime) && options.asImage)) mtype = 'image'
         else if (/video/.test(type.mime)) mtype = 'video'
-        else if (/audio/.test(type.mime))(
-            convert = await (ptt ? toPTT : toAudio)(file, type.ext),
-            file = convert.data,
-            pathFile = convert.filename,
-            mtype = 'audio',
-            mimetype = 'audio/ogg; codecs=opus'
-        )
+        else if (/audio/.test(type.mime)) {
+            // Note: toPTT and toAudio functions need to be implemented
+            mtype = 'audio'
+            // convert = await (ptt ? toPTT : toAudio)(file, type.ext),
+            // file = convert.data,
+            // pathFile = convert.filename,
+            // mimetype = 'audio/ogg; codecs=opus'
+        }
         else mtype = 'document'
         if (options.asDocument) mtype = 'document'
 
@@ -220,7 +221,7 @@ X.sendFile = async (jid, path, filename = '', caption = '', quoted, ptt = false,
 // Paramètres de bienvenue
 
     X.ev.on('group-participants.update', async (anu) => {
-    	if (global.welcome){
+        if (global.welcome){
 console.log(anu)
 try {
 let metadata = await X.groupMetadata(anu.id)
@@ -242,7 +243,7 @@ groupleft = await getBuffer(ppuser)
                 if (anu.action == 'add') {
                 const Xbuffer = await getBuffer(ppuser)
                 let XName = num
-	            const members = metadata.participants.length
+                    const members = metadata.participants.length
                 Xbody = `
 ┏──────────────────────⏣ 
 @${XName.split("@")[0]}
@@ -265,8 +266,8 @@ X.sendMessage(anu.id,
 "thumbnail": groupwelcome,
 "sourceUrl": `${wagc}`}}})
                 } else if (anu.action == 'remove') {
-                	const Xbuffer = await getBuffer(ppuser)
-                	let XName = num
+                        const Xbuffer = await getBuffer(ppuser)
+                        let XName = num
                     const Xmembers = metadata.participants.length
                     Xbody = `
 ┏──────────────────────⏣ 
@@ -298,7 +299,7 @@ console.log(err)
 })
 //━━━━━━━━━━━━━━━━━━━━━//
     X.ev.on('group-participants.update', async (anu) => {
-    	if (global.adminevent){
+        if (global.adminevent){
 console.log(anu)
 try {
 let participants = anu.participants

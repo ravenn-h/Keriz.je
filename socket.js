@@ -103,7 +103,7 @@ const speed = require("performance-now") // Mesure de performance et vitesse
 const { Sticker } = require("wa-sticker-formatter") // Création de stickers WhatsApp
 const { igdl } = require("btch-downloader") // Téléchargeur Instagram
 const yts = require("yt-search") // Recherche YouTube
-const ddownr = require("ddownr") // Téléchargeur universel
+// const ddownr = require("ddownr") // Téléchargeur universel - Module not available
 const cheerio = require("cheerio") // Parser HTML pour scraping
 const crypto = require("crypto") // Fonctions de cryptographie
 const jimp = require("jimp") // Manipulation d'images
@@ -115,7 +115,7 @@ const otakuDesu = require("./library/scrape/otakudesu") // Anime OtakuDesu
 const Kusonime = require("./library/scrape/kusonime") // Anime Kusonime
 const { quote } = require("./library/scrape/quote.js") // Citations stylisées
 const { fdown } = require("./library/scrape/facebook.js") // Téléchargeur Facebook
-const { gempa } = require("./library/scrape/bmkg.js") // Informations séismes BMKG
+// const { gempa } = require("./library/scrape/bmkg.js") // Informations séismes BMKG - File not found
 
 const {
   komiku, // Scraper de manga Komiku
@@ -326,18 +326,19 @@ module.exports = async (X, m) => {
     // Système de suggestions de commandes similaires
     function getCaseNames() {
       try {
-        const data = fs.readFileSync("./client.js", "utf8")
-        const casePattern = /case\s+'([^']+)'/g
-        const matches = data.match(casePattern)
+        const data = fs.readFileSync("./socket.js", "utf8")
+        const casePattern = /case\s+['"']([^'"]+)['"']/g
+        const matches = []
+        let match
 
-        if (matches) {
-          return matches.map((match) => match.replace(/case\s+'([^']+)'/, "$1"))
-        } else {
-          return []
+        while ((match = casePattern.exec(data)) !== null) {
+          matches.push(match[1])
         }
+
+        return matches
       } catch (error) {
         console.error("Une erreur est survenue :", error)
-        throw error
+        return [] // Return empty array instead of throwing
       }
     }
 
@@ -358,9 +359,14 @@ module.exports = async (X, m) => {
     //━━━━━━━━━━━━━━━━━━━━━━━━//
     // Compteur de fonctionnalités totales
     const totalcmd = () => {
-      var mytext = fs.readFileSync("./client.js").toString()
-      var numUpper = (mytext.match(/case '/g) || []).length
-      return numUpper
+      try {
+        var mytext = fs.readFileSync("./socket.js").toString()
+        var numUpper = (mytext.match(/case\s+['"']/g) || []).length
+        return numUpper
+      } catch (error) {
+        console.error("Erreur lors du comptage des commandes:", error)
+        return 0
+      }
     }
 
     //━━━━━━━━━━━━━━━━━━━━━━━━//
@@ -560,7 +566,7 @@ module.exports = async (X, m) => {
 
           const infoBot = `
 👋 Salut, ${pushname}
-Je suis MERILDA qui peut t'aider à rechercher, jouer ou télécharger. Je peux aussi être un compagnon de chat, un confident.
+Je suis Vrush-maria qui peut t'aider à rechercher, jouer ou télécharger. Je peux aussi être un compagnon de chat, un confident.
 
 ╭─ ⌬ Infos Bot
 │ • nom     : ${botname}
@@ -1266,7 +1272,7 @@ Tape : *.menu [catégorie]*
           // Message d'attente
           reply(global.mess.wait)
           const ppnyauser = await X.profilePictureUrl(m.sender, "image").catch(
-            (_) => "https://files.catbox.moe/nwvkbt.png",
+            (_) => "https://files.catbox.moe/4vynlz.jpg",
           )
           const rest = await quote(text, pushname, ppnyauser)
           X.sendImageAsSticker(m.chat, rest.result, m, {
@@ -2421,7 +2427,7 @@ Tape : *.menu [catégorie]*
       case "sc":
         {
           reply(
-            `Tu veux le script d'MERILDA ? \nInfo mise à jour script : +22501676111\nContact développeur : https://t.me/his_oka_07`,
+            `Tu veux le script de Vrush-maria ? \nInfo mise à jour script : +22501676111\nContact développeur : https://t.me/his_oka_07`,
           )
         }
         break
@@ -2442,6 +2448,205 @@ Tape : *.menu [catégorie]*
           reply(botInfo)
         }
         break
+
+      case "play": 
+      case "ytmp3": 
+      case "ytaudio": {
+        if (!text) {
+          const helpMsg = `
+┌──────────────────┐
+│ 🎵 **YOUTUBE AUDIO** │
+└──────────────────┘
+
+**Utilisation:**
+■ ${prefix + command} URL YouTube
+■ ${prefix + command} nom de la chanson
+
+**Exemples:**
+■ ${prefix + command} https://youtu.be/xxxx
+■ ${prefix + command} Imagine Dragons Thunder
+
+┌──────────────────┐
+│ ⚡ **${botname}** │
+└──────────────────┘`;
+          return reply(helpMsg);
+        }
+        
+        try {
+          const yts = require("yt-search");
+          let search = await yts(text);
+          
+          if (!search.all[0]) {
+            return reply(`❌ Aucun résultat trouvé pour: ${text}`);
+          }
+          
+          let video = search.all[0];
+          
+          let caption = `
+┌──────────────────┐
+│ 🎵 **RÉSULTAT TROUVÉ** │
+└──────────────────┘
+
+■ **Titre:** ${video.title}
+■ **Durée:** ${video.timestamp}
+■ **Vues:** ${video.views}
+■ **Chaîne:** ${video.author.name}
+■ **URL:** ${video.url}
+
+⏳ _Téléchargement audio en cours..._
+
+┌──────────────────┐
+│ ⚡ **${botname}** │
+└──────────────────┘`;
+          
+          await X.sendMessage(m.chat, {
+            image: { url: video.thumbnail },
+            caption: caption
+          }, { quoted: m });
+          
+          // Try to get audio URL using existing API
+          const fg = require("api-dylux");
+          const result = await fg.yta(video.url);
+          
+          if (result && result.dl_url) {
+            await X.sendMessage(m.chat, {
+              audio: { url: result.dl_url },
+              mimetype: 'audio/mpeg',
+              fileName: `${video.title}.mp3`,
+              ptt: false
+            }, { quoted: m });
+          } else {
+            reply("❌ Erreur lors du téléchargement audio. Réessayez plus tard.");
+          }
+          
+        } catch (error) {
+          console.error("YouTube audio download error:", error);
+          reply("❌ Erreur lors du téléchargement. Réessayez plus tard.");
+        }
+      }
+      break;
+
+      case "hug":
+      case "calin": {
+        const quotedUser = m.quoted ? m.quoted.sender : null;
+        try {
+          const url = "https://api.waifu.pics/sfw/hug";
+          const response = await axios.get(url);
+          const imageUrl = response.data.url;
+          
+          let caption, mentions;
+          if (quotedUser) {
+            caption = `@${m.sender.split("@")[0]} fait un câlin à @${quotedUser.split("@")[0]} 🤗`;
+            mentions = [m.sender, quotedUser];
+          } else {
+            caption = `@${m.sender.split("@")[0]} se fait un câlin 🤗`;
+            mentions = [m.sender];
+          }
+          
+          await X.sendMessage(m.chat, {
+            image: { url: imageUrl },
+            caption: caption,
+            mentions: mentions
+          }, { quoted: m });
+          
+        } catch (error) {
+          reply("❌ Erreur lors de la récupération de l'image.");
+        }
+      }
+      break;
+
+      case "kiss":
+      case "embrasser": {
+        const quotedUser = m.quoted ? m.quoted.sender : null;
+        try {
+          const url = "https://api.waifu.pics/sfw/kiss";
+          const response = await axios.get(url);
+          const imageUrl = response.data.url;
+          
+          let caption, mentions;
+          if (quotedUser) {
+            caption = `@${m.sender.split("@")[0]} embrasse @${quotedUser.split("@")[0]} 💋`;
+            mentions = [m.sender, quotedUser];
+          } else {
+            caption = `@${m.sender.split("@")[0]} s'embrasse 💋`;
+            mentions = [m.sender];
+          }
+          
+          await X.sendMessage(m.chat, {
+            image: { url: imageUrl },
+            caption: caption,
+            mentions: mentions
+          }, { quoted: m });
+          
+        } catch (error) {
+          reply("❌ Erreur lors de la récupération de l'image.");
+        }
+      }
+      break;
+
+      case "slap":
+      case "gifle": {
+        const quotedUser = m.quoted ? m.quoted.sender : null;
+        try {
+          const url = "https://api.waifu.pics/sfw/slap";
+          const response = await axios.get(url);
+          const imageUrl = response.data.url;
+          
+          let caption, mentions;
+          if (quotedUser) {
+            caption = `@${m.sender.split("@")[0]} gifle @${quotedUser.split("@")[0]} 👋`;
+            mentions = [m.sender, quotedUser];
+          } else {
+            caption = `@${m.sender.split("@")[0]} se gifle 👋`;
+            mentions = [m.sender];
+          }
+          
+          await X.sendMessage(m.chat, {
+            image: { url: imageUrl },
+            caption: caption,
+            mentions: mentions
+          }, { quoted: m });
+          
+        } catch (error) {
+          reply("❌ Erreur lors de la récupération de l'image.");
+        }
+      }
+      break;
+
+      case "qc": {
+        if (!q) return reply(`Envoyez une commande avec du texte. ${prefix + command} ${pushname}`);
+        let obj = {
+          type: 'quote',
+          format: 'png',
+          backgroundColor: '#ffffff',
+          width: 512,
+          height: 768,
+          scale: 2,
+          messages: [
+            {
+              entities: [],
+              avatar: true,
+              from: {
+                id: 1,
+                name: `${pushname}`,
+                photo: { 
+                  url: await X.profilePictureUrl(m.sender, "image").catch(() => 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png?q=60'),
+                }
+              },
+              text: `${q}`,
+              replyMessage: {},
+            },
+          ],
+        };
+        let response = await axios.post('https://bot.lyo.su/quote/generate', obj, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        let buffer = Buffer.from(response.data.result.image, 'base64');
+        X.sendImageAsSticker(m.chat, buffer, m, { packname: `${packname}`, author: `${author}` });
+      }
+      break;
 
       //━━━━━━━━━━━━━━━━━━━━━━━━//
       default:

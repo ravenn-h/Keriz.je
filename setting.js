@@ -6,7 +6,7 @@ global.ownername = "𝕽𝖆𝖛𝖊𝖓"
 
 //━━━━━━━━━━━━━━━━━━━━━━━━//
 // Bot Setting
-global.botname = "MERILDA"
+global.botname = "Vrush-maria"
 global.botver = "1.0.0"
 global.idch = "120363400575205721@newsletter"
 global.newsletterName = "𝗛𝗜𝗦𝗢𝗞𝗔-𝗠𝗗"
@@ -22,7 +22,7 @@ global.autoRead = false
 global.autoReadBroadcast = false
 //━━━━━━━━━━━━━━━━━━━━━━━━//
 // Sticker Marker
-global.packname = "MERILDA"
+global.packname = "Vrush-maria"
 global.author = "𝕽𝖆𝖛𝖊𝖓"
 //━━━━━━━━━━━━━━━━━━━━━━━━//
 // Respon Message
