@@ -8,6 +8,7 @@ const fs = require('fs')
 const readline = require("readline");
 const _ = require('lodash')
 const yargs = require('yargs/yargs')
+const FileType = require('file-type')
 const PhoneNumber = require('awesome-phonenumber')
 const FileType = require('file-type')
 const path = require('path')
