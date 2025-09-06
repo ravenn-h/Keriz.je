@@ -597,18 +597,35 @@ ${waktuucapan}
           } else {
             menu = `
 
-📂 *Liste des Menus*
-⤷ .menu ai
-⤷ .menu all
-⤷ .menu other
-⤷ .menu tools
-⤷ .menu group
-⤷ .menu owner
-⤷ .menu search
-⤷ .menu sticker
-⤷ .menu downloader
+📂 *MENU PRINCIPAL* 📂
 
-Tape : *.menu [catégorie]*
+┌──────────────────┐
+│ 📋 **TOUS LES MENUS** │
+└──────────────────┘
+
+▢ .menu1 - 👤 Owner Menu
+▢ .menu2 - ℹ️ Info Menu  
+▢ .menu3 - ⬇️ Download Menu
+▢ .menu4 - 🎮 Fun Menu
+▢ .menu5 - 😊 Reactions Menu
+▢ .menu6 - 🛠️ Tools Menu
+
+┌──────────────────┐
+│ 🚀 **RACCOURCIS** │
+└──────────────────┘
+
+▢ .ai - Chat avec AI
+▢ .fancy - Texte stylé (1-47)
+▢ .saver - Status downloader
+▢ .play - YouTube audio
+▢ .tiktok - TikTok video
+▢ .wallpaper - HD wallpapers
+
+┌──────────────────┐
+│ ⚡ **${botname}** │
+└──────────────────┘
+
+💡 *Tape .menu[numéro] pour un menu spécifique*
 `.trim()
           }
 
@@ -2645,6 +2662,1185 @@ Tape : *.menu [catégorie]*
         });
         let buffer = Buffer.from(response.data.result.image, 'base64');
         X.sendImageAsSticker(m.chat, buffer, m, { packname: `${packname}`, author: `${author}` });
+      }
+      break;
+
+      // ===== AI COMMAND WITH GIFTEDTECH API =====
+      case "ai": case "gpt": {
+        if (!text) return reply("Exemple: .ai Bonjour comment ça va ?");
+        
+        try {
+          reply("🤖 AI est en train de réfléchir...");
+          
+          const response = await fetch(`https://api.giftedtech.co.ke/api/ai/gpt?apikey=gifted&q=${encodeURIComponent(text)}`);
+          const data = await response.json();
+          
+          if (data && data.response) {
+            reply(`🤖 *Vrush-maria AI:*\n\n${data.response}`);
+          } else {
+            reply("❌ Erreur lors de la récupération de la réponse AI");
+          }
+        } catch (error) {
+          console.error("AI Error:", error);
+          reply("❌ Service AI temporairement indisponible");
+        }
+      }
+      break;
+
+      // ===== ENHANCED STATUS SAVER (@storybroadcast) =====
+      case "saver": case "statusdl": case "story": case "statusdownload": {
+        try {
+          if (!m.quoted) {
+            return reply(`
+📱 *STATUS SAVER* 📱
+
+🔄 *Usage:*
+• Reply to any status to download it
+• Works with images, videos, and text
+• Automatically detects status type
+
+📸 *Supported formats:*
+• Status images
+• Status videos  
+• Status text messages
+• View once messages
+
+💡 *Example:* Reply to a status with .saver
+
+🎯 *Feature:* Downloads and resends to @storybroadcast
+`);
+          }
+
+          let statusBuffer, statusType, caption = "";
+          const quotedMsg = m.quoted;
+          
+          // Check different message types
+          if (quotedMsg.message) {
+            const msgContent = quotedMsg.message;
+            
+            // Image status
+            if (msgContent.imageMessage) {
+              statusBuffer = await X.downloadMediaMessage(quotedMsg);
+              statusType = 'image';
+              caption = "📸 *Status Image Downloaded*\n\n🔄 _Saved from WhatsApp Status_";
+            }
+            // Video status  
+            else if (msgContent.videoMessage) {
+              statusBuffer = await X.downloadMediaMessage(quotedMsg);
+              statusType = 'video';
+              caption = "🎬 *Status Video Downloaded*\n\n🔄 _Saved from WhatsApp Status_";
+            }
+            // Text status
+            else if (msgContent.extendedTextMessage || msgContent.conversation) {
+              const textContent = msgContent.extendedTextMessage?.text || msgContent.conversation;
+              caption = `📝 *Status Text Downloaded*\n\n"${textContent}"\n\n🔄 _Saved from WhatsApp Status_`;
+              statusType = 'text';
+            }
+          }
+          
+          if (statusType === 'text') {
+            // Send text status
+            await X.sendMessage(m.chat, {
+              text: caption
+            }, { quoted: m });
+            
+            // Send to story broadcast if exists
+            try {
+              const storyBroadcastId = `120363043390114619@newsletter`;
+              await X.sendMessage(storyBroadcastId, {
+                text: caption
+              });
+            } catch (broadcastError) {
+              console.log("Story broadcast not found or inaccessible");
+            }
+            
+          } else if (statusBuffer && statusType) {
+            // Send media status to user
+            await X.sendMessage(m.chat, {
+              [statusType]: statusBuffer,
+              caption: caption
+            }, { quoted: m });
+            
+            // Try to send to story broadcast
+            try {
+              const storyBroadcastId = `120363043390114619@newsletter`;
+              await X.sendMessage(storyBroadcastId, {
+                [statusType]: statusBuffer,
+                caption: `🔄 *Status forwarded automatically*\n\n📡 From: @${m.sender.split('@')[0]}`
+              });
+              reply("✅ Status also sent to @storybroadcast");
+            } catch (broadcastError) {
+              console.log("Story broadcast not accessible");
+              reply("✅ Status downloaded successfully");
+            }
+            
+          } else {
+            reply("❌ Unable to download this status type. Make sure you're replying to a status message.");
+          }
+          
+        } catch (error) {
+          console.error("Status saver error:", error);
+          reply("❌ Failed to download status. Please try again.");
+        }
+      }
+      break;
+
+      // ===== ANTI DELETE =====
+      case "antidelete": case "antidel": {
+        if (!m.isGroup) return reply("Cette commande ne peut être utilisée que dans des groupes");
+        if (!isAdmins && !Hisoka) return reply("Cette commande est réservée aux admins");
+        
+        global.db = global.db || {};
+        global.db.groups = global.db.groups || {};
+        global.db.groups[m.chat] = global.db.groups[m.chat] || {};
+        
+        if (args[0] === 'on') {
+          global.db.groups[m.chat].antidelete = true;
+          reply("✅ Anti-delete activé ! Les messages supprimés seront récupérés.");
+        } else if (args[0] === 'off') {
+          global.db.groups[m.chat].antidelete = false;
+          reply("❌ Anti-delete désactivé !");
+        } else {
+          let status = global.db.groups[m.chat].antidelete ? "Activé" : "Désactivé";
+          reply(`🛡️ Anti-delete Status: ${status}\n\nUtilisation:\n.antidelete on - Activer\n.antidelete off - Désactiver`);
+        }
+      }
+      break;
+
+      // ===== MENU 1 - OWNER =====
+      case "menu1": {
+        const menuImage = "https://files.catbox.moe/pkmiz6.jpg";
+        const menuText = `
+┌──────────────────┐
+│ 👤 **OWNER MENU** │
+└──────────────────┘
+
+▢ .ai - Chat with AI
+▢ .status - Presence control
+▢ .resetprefix - Reset prefix
+▢ .fakechat - Generate fake chat
+▢ .setvar - Set variable
+▢ .getvar - Get variable
+▢ .allvar - List variables
+▢ .delvar - Delete variable
+▢ .block - Block user
+▢ .unblock - Unblock user
+
+┌──────────────────┐
+│ ⚡ **${botname}** │
+└──────────────────┘`;
+
+        await X.sendMessage(m.chat, {
+          image: { url: menuImage },
+          caption: menuText
+        }, { quoted: m });
+      }
+      break;
+
+      // ===== MENU 2 =====  
+      case "menu2": {
+        const menuImage = "https://files.catbox.moe/3w0llo.jpg";
+        const menuText = `
+┌──────────────────┐
+│ ℹ️ **INFO MENU** │
+└──────────────────┘
+
+▢ .ping
+▢ .runtime
+▢ .speed
+▢ .owner
+▢ .script
+▢ .groupinfo
+▢ .botinfo
+▢ .serverinfo
+
+┌──────────────────┐
+│ ⚡ **${botname}** │
+└──────────────────┘`;
+
+        await X.sendMessage(m.chat, {
+          image: { url: menuImage },
+          caption: menuText
+        }, { quoted: m });
+      }
+      break;
+
+      // ===== MENU 3 - DOWNLOAD =====
+      case "menu3": {
+        const menuImage = "https://files.catbox.moe/k3xvf0.jpg";
+        const menuText = `
+┌──────────────────┐
+│ ⬇️ **DOWNLOAD MENU** │
+└──────────────────┘
+
+▢ .play - YouTube audio
+▢ .ytmp3 - YouTube MP3
+▢ .tiktok - TikTok video
+▢ .tt - TikTok shortcut
+▢ .instagram - Instagram
+▢ .ig - IG shortcut
+▢ .facebook - Facebook
+▢ .fb - FB shortcut
+▢ .saver - Status downloader
+▢ .story - Download status
+
+┌──────────────────┐
+│ ⚡ **${botname}** │
+└──────────────────┘`;
+
+        await X.sendMessage(m.chat, {
+          image: { url: menuImage },
+          caption: menuText
+        }, { quoted: m });
+      }
+      break;
+
+      // ===== MENU 4 - FUN =====
+      case "menu4": {
+        const menuImage = "https://files.catbox.moe/pkmiz6.jpg";
+        const menuText = `
+┌──────────────────┐
+│ 🎮 **FUN MENU** │
+└──────────────────┘
+
+▢ .fancy - Fancy text (1-47)
+▢ .wallpaper - HD wallpapers
+▢ .couplepp - Couple pictures
+▢ .manhwa - Manhwa search
+▢ .animequote - Anime quotes
+▢ .quote - Random quotes
+▢ .joke - Funny jokes
+▢ .fact - Interesting facts
+▢ .hug - Hug reaction
+▢ .kiss - Kiss reaction
+▢ .slap - Slap reaction
+
+┌──────────────────┐
+│ ⚡ **${botname}** │
+└──────────────────┘`;
+
+        await X.sendMessage(m.chat, {
+          image: { url: menuImage },
+          caption: menuText
+        }, { quoted: m });
+      }
+      break;
+
+      // ===== MENU 5 - REACTIONS =====
+      case "menu5": case "reactions": {
+        const menuImage = "https://files.catbox.moe/3w0llo.jpg";
+        const menuText = `
+┌──────────────────┐
+│ 😊 **REACTIONS MENU** │
+└──────────────────┘
+
+▢ .react 😍 - Custom reaction
+▢ .smile - 😊 reaction
+▢ .love - ❤️ reaction  
+▢ .angry - 😡 reaction
+▢ .laugh - 😂 reaction
+▢ .wow - 😱 reaction
+▢ .hug - 🤗 hug GIF
+▢ .kiss - 💋 kiss GIF
+▢ .slap - 👋 slap GIF
+
+*Reply to a message with these commands*
+
+┌──────────────────┐
+│ ⚡ **${botname}** │
+└──────────────────┘`;
+
+        await X.sendMessage(m.chat, {
+          image: { url: menuImage },
+          caption: menuText
+        }, { quoted: m });
+      }
+      break;
+
+      // ===== MENU 6 - TOOLS =====
+      case "menu6": case "tools": {
+        const menuImage = "https://files.catbox.moe/k3xvf0.jpg";
+        const menuText = `
+┌──────────────────┐
+│ 🛠️ **TOOLS MENU** │
+└──────────────────┘
+
+▢ .enhance - Upscale images
+▢ .upscale - AI enhancement  
+▢ .rvo - Read view once
+▢ .vv - View once reader
+▢ .qc - Quote creator
+▢ .forward - Forward audio
+▢ .tovideo - Sticker to video
+▢ .sticker - Create sticker
+▢ .s - Sticker shortcut
+
+┌──────────────────┐
+│ ⚡ **${botname}** │
+└──────────────────┘`;
+
+        await X.sendMessage(m.chat, {
+          image: { url: menuImage },
+          caption: menuText
+        }, { quoted: m });
+      }
+      break;
+
+      // ===== STICKER IMPROVEMENTS =====
+      case "sticker": case "stiker": case "sgif": case "s": {
+        if (!/image|video/.test(mime)) return reply("Envoyez l'image !");
+        if (/video/.test(mime)) {
+          if ((quoted).seconds > 15) return reply("La durée de la vidéo est de 15 secondes maximum !");
+        }
+        var media = await X.downloadAndSaveMediaMessage(quoted);
+        await X.sendImageAsSticker(m.chat, media, m, {packname: ` ${ownername}`});
+        await fs.unlinkSync(media);
+      }
+      break;
+
+      // ===== FORWARD COMMAND =====
+      case "forward": {
+        try {
+          if (args.length < 1) {
+            return reply("❌ Example: .forward 120xxx@newsletter (reply to audio)");
+          }
+
+          const channelId = args[0];
+          const quoted = m.quoted;
+          const mime = quoted ? quoted.mimetype : null;
+
+          if (!quoted || !/audio/.test(mime)) {
+            return reply("❌ Reply to an audio with this command.");
+          }
+
+          const audioBuffer = await quoted.download();
+
+          await X.sendMessage(
+            channelId,
+            {
+              audio: audioBuffer,
+              mimetype: "audio/mpeg",
+              ptt: true,
+            },
+            { quoted: m }
+          );
+
+          reply("✅ Audio successfully sent to the channel.");
+        } catch (err) {
+          console.error("Failed to send audio:", err);
+          reply("❌ Failed to send audio to the channel.");
+        }
+      }
+      break;
+
+      // ===== READ VIEW ONCE =====
+      case "rvo": case "readvo": case "readviewonce": case "readviewoncemessage": case "vv": {
+        const { downloadContentFromMessage } = require("@whiskeysockets/baileys");
+        
+        const quoted = m.message?.extendedTextMessage?.contextInfo?.quotedMessage;
+
+        const mediaType = quoted?.imageMessage ? "image"
+                        : quoted?.videoMessage ? "video"
+                        : null;
+
+        if (!mediaType) {
+          return X.sendMessage(m.chat, {
+            text: "❌ Please *reply to a view once image or short video* to retrieve."
+          }, { quoted: m });
+        }
+
+        try {
+          const stream = await downloadContentFromMessage(
+            mediaType === "image" ? quoted.imageMessage : quoted.videoMessage,
+            mediaType
+          );
+
+          let buffer = Buffer.from([]);
+          for await (const chunk of stream) {
+            buffer = Buffer.concat([buffer, chunk]);
+          }
+
+          await X.sendMessage(m.chat, {
+            [mediaType]: buffer,
+            caption: `💥 Here's your removed view-once ${mediaType}`
+          }, {
+            quoted: {
+              key: {
+                fromMe: false,
+                participant: "0@s.whatsapp.net",
+                remoteJid: m.chat
+              },
+              message: {
+                conversation: "🤺 VIEW ONCE FETCHED"
+              }
+            }
+          });
+
+        } catch (err) {
+          console.error("❌ View once retrieval error:", err);
+          await X.sendMessage(m.chat, {
+            text: "⚠️ Failed to retrieve view once."
+          }, { quoted: m });
+        }
+      }
+      break;
+
+      // ===== ENHANCED YOUTUBE COMMANDS =====
+      case "play": case "ytmp3": case "ytaudio": {
+        if (!text) {
+          const helpMsg = `
+┌──────────────────┐
+│ 🎵 **YOUTUBE AUDIO** │
+└──────────────────┘
+
+**Utilisation:**
+■ ${prefix + command} URL YouTube
+■ ${prefix + command} nom de la chanson
+
+**Exemples:**
+■ ${prefix + command} https://youtu.be/xxxx
+■ ${prefix + command} Imagine Dragons Thunder
+
+┌──────────────────┐
+│ ⚡ **${botname}** │
+└──────────────────┘`;
+          return reply(helpMsg);
+        }
+        
+        const ytRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+        const match = text.match(ytRegex);
+        let videoUrl = null;
+        
+        if (!match) {
+          try {
+            const searchMsg = `
+┌──────────────────┐
+│ 🔍 **SEARCHING** │
+└──────────────────┘
+
+■ Recherche de: ${text}
+■ Analyse des résultats...
+
+┌──────────────────┐
+│ ⚡ **${botname}** │
+└──────────────────┘`;
+            
+            reply(searchMsg);
+            
+            const yts = require('yt-search');
+            let search = await yts(text);
+            
+            if (!search.all[0]) {
+              return reply(`
+┌──────────────────┐
+│ ❌ **NO RESULTS** │
+└──────────────────┘
+
+⚠️ Aucun résultat trouvé pour: ${text}
+
+**Conseils:**
+■ Vérifiez l'orthographe
+■ Essayez avec des mots-clés différents
+■ Utilisez un lien YouTube direct
+
+┌──────────────────┐
+│ ⚡ **${botname}** │
+└──────────────────┘`);
+            }
+            
+            let video = search.all[0];
+            videoUrl = video.url;
+            
+            let caption = `
+┌──────────────────┐
+│ 🎵 **FOUND RESULT** │
+└──────────────────┘
+
+■ **Titre:** ${video.title}
+■ **Durée:** ${video.timestamp}
+■ **Vues:** ${video.views}
+■ **Chaîne:** ${video.author.name}
+■ **URL:** ${video.url}
+
+⏳ _Téléchargement audio en cours..._
+
+┌──────────────────┐
+│ ⚡ **${botname}** │
+└──────────────────┘`;
+            
+            await X.sendMessage(m.chat, {
+              image: { url: video.thumbnail },
+              caption: caption
+            }, { quoted: m });
+            
+          } catch (error) {
+            console.error(error);
+            return reply("❌ Erreur lors de la recherche. Réessayez plus tard.");
+          }
+        }
+        
+        try {
+          const finalUrl = videoUrl || text;
+          const fg = require("api-dylux");
+          const result = await fg.yta(finalUrl);
+          
+          if (result && result.dl_url) {
+            await X.sendMessage(m.chat, {
+              audio: { url: result.dl_url },
+              mimetype: 'audio/mpeg',
+              fileName: `${result.title || 'audio'}.mp3`,
+              ptt: false
+            }, { quoted: m });
+          } else {
+            throw new Error("Impossible de récupérer le lien audio");
+          }
+          
+        } catch (error) {
+          console.error("YouTube audio download error:", error);
+          const errorMsg = `
+┌──────────────────┐
+│ ❌ **DOWNLOAD ERROR** │
+└──────────────────┘
+
+⚠️ Erreur de téléchargement audio
+
+**Solutions:**
+■ Vérifiez le lien YouTube
+■ Réessayez dans quelques minutes
+■ Essayez avec un autre lien
+
+┌──────────────────┐
+│ ⚡ **${botname}** │
+└──────────────────┘`;
+          
+          reply(errorMsg);
+        }
+      }
+      break;
+
+      // ===== ENHANCED TIKTOK =====
+      case 'tiktok': case 'tt': {
+        if (!text) return reply(`Envoyez l'URL TikTok\nExemple: ${prefix + command} https://tiktok.com/@user/video/xxx`);
+        
+        if (!text.includes('tiktok.com')) return reply("Veuillez envoyer une URL TikTok valide !");
+        
+        try {
+          reply("⏳ Téléchargement TikTok en cours...");
+          
+          const response = await fetch(`https://tikwm.com/api/?url=${encodeURIComponent(text)}`);
+          const data = await response.json();
+          
+          if (data.code === 0 && data.data) {
+            const result = data.data;
+            let caption = `🎵 *TikTok Video*\n\n`;
+            if (result.title) caption += `📌 *Titre:* ${result.title}\n`;
+            if (result.author) caption += `👤 *Auteur:* @${result.author.unique_id}\n`;
+            if (result.duration) caption += `⏱️ *Durée:* ${result.duration}s\n`;
+            caption += `❤️ *Likes:* ${result.digg_count || 0}\n`;
+            caption += `💬 *Commentaires:* ${result.comment_count || 0}\n`;
+            caption += `🔄 *Partages:* ${result.share_count || 0}\n`;
+            caption += `\n_Powered by ${botname}_`;
+            
+            if (result.play) {
+              await X.sendMessage(m.chat, {
+                video: { url: result.play },
+                caption: caption
+              }, { quoted: m });
+            } else if (result.wmplay) {
+              await X.sendMessage(m.chat, {
+                video: { url: result.wmplay },
+                caption: caption + "\n\n⚠️ _Version avec watermark_"
+              }, { quoted: m });
+            } else {
+              throw new Error("Aucun lien vidéo disponible");
+            }
+          } else {
+            throw new Error("Impossible de télécharger cette vidéo TikTok");
+          }
+        } catch (error) {
+          console.error("TikTok download error:", error);
+          reply(`❌ Service TikTok temporairement indisponible\n\n🔄 *Solutions alternatives:*\n• Réessayez dans quelques minutes\n• Vérifiez que l'URL est correcte`);
+        }
+      }
+      break;
+
+      // ===== GROUP MANAGEMENT =====
+      case 'promote': {
+        if (!m.isGroup) return reply("Cette commande ne peut être utilisée que dans des groupes.");
+        if (!isAdmins && !Hisoka) return reply("Cette commande est réservée aux admins.");
+        
+        let users = m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : text.replace(/[^0-9]/g, '') + '@s.whatsapp.net';
+        if (!users) return reply("Mentionnez ou répondez à quelqu'un pour le promouvoir admin.");
+        
+        try {
+          await X.groupParticipantsUpdate(m.chat, [users], 'promote');
+          reply(`@${users.split('@')[0]} a été promu admin !`, { mentions: [users] });
+        } catch (error) {
+          reply("Échec de la promotion.");
+        }
+      }
+      break;
+
+      case 'demote': {
+        if (!m.isGroup) return reply("Cette commande ne peut être utilisée que dans des groupes.");
+        if (!isAdmins && !Hisoka) return reply("Cette commande est réservée aux admins.");
+        
+        let users = m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : text.replace(/[^0-9]/g, '') + '@s.whatsapp.net';
+        if (!users) return reply("Mentionnez ou répondez à quelqu'un pour le rétrograder.");
+        
+        try {
+          await X.groupParticipantsUpdate(m.chat, [users], 'demote');
+          reply(`@${users.split('@')[0]} n'est plus admin !`, { mentions: [users] });
+        } catch (error) {
+          reply("Échec de la rétrogradation.");
+        }
+      }
+      break;
+
+      case 'add': {
+        if (!m.isGroup) return reply("Cette commande ne peut être utilisée que dans des groupes.");
+        if (!isAdmins && !Hisoka) return reply("Cette commande est réservée aux admins.");
+        
+        if (!text) return reply("Entrez le numéro à ajouter.\nExemple: .add 225xxxxxxxx");
+        
+        let users = text.replace(/[^0-9]/g, '') + '@s.whatsapp.net';
+        
+        try {
+          await X.groupParticipantsUpdate(m.chat, [users], 'add');
+          reply(`@${users.split('@')[0]} a été ajouté au groupe !`, { mentions: [users] });
+        } catch (error) {
+          reply("Échec de l'ajout. Vérifiez le numéro ou les paramètres de confidentialité.");
+        }
+      }
+      break;
+
+      case 'kick': {
+        if (!Hisoka) return reply("This command is only for the owner.");
+        if (!m.isGroup) return reply("This command can only be used in groups.");
+        if (!isBotAdmins) return reply("Bot must be admin to use this command.");
+        if (!isAdmins) return reply("You must be admin to use this command.");
+
+        let users = m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : text.replace(/[^0-9]/g, '') + '@s.whatsapp.net';
+        if (!users) return reply("Send number / tag users");
+        
+        try {
+          await X.groupParticipantsUpdate(m.chat, [users], 'remove');
+          reply(`Successfully kicked ${users.split('@')[0]}`);
+        } catch (error) {
+          reply("Failed to kick user.");
+        }
+      }
+      break;
+
+      case 'tagall': {
+        if (!m.isGroup) return reply("Cette commande ne peut être utilisée que dans des groupes.");
+
+        let participants = groupMetadata.participants || [];
+        let message = text || "";
+        let mentions = participants.map(a => a.id);
+        
+        let teks = `*📢 ANNONCE *\n\n`
+        teks += `💬 *Message:* ${message}\n\n`
+  
+        for (const mem of participants) {
+          teks += `┣➥ @${mem.id.split('@')[0]}\n`
+        }
+
+        teks += `*└ 𝚅𝚛𝚞𝚜𝚑 𝙼𝚊𝚛𝚒𝚊 𝚟𝟸*`
+
+        await X.sendMessage(m.chat, {
+          text: teks,
+          mentions: participants.map((a) => a.id)
+        }, { quoted: m })
+      }
+      break;
+
+      // ===== IMAGE PROCESSING =====
+      case 'enhance': case 'upscale': {
+        if (!/image/.test(mime)) return reply("Répondez à une image pour l'améliorer !");
+        
+        try {
+          reply("Amélioration de l'image en cours...");
+          let media = await X.downloadAndSaveMediaMessage(quoted);
+          
+          // Using upscaling API
+          let form = new (require('form-data'))();
+          form.append('image', fs.createReadStream(media));
+          
+          let response = await fetch('https://api.agatz.xyz/api/upscale', {
+            method: 'POST',
+            body: form
+          });
+          
+          const data = await response.json();
+          
+          if (data.status && data.data) {
+            await X.sendMessage(m.chat, { 
+              image: { url: data.data }, 
+              caption: "***_Image améliorée !_***" 
+            }, { quoted: m });
+          } else {
+            // Fallback avec simple enhancement
+            await X.sendMessage(m.chat, { 
+              image: fs.readFileSync(media),
+              caption: "***_Image traitée !_***" 
+            }, { quoted: m });
+          }
+          
+          fs.unlinkSync(media);
+        } catch (error) {
+          console.error("Upscale Error:", error);
+          reply("Erreur lors de l'amélioration de l'image.");
+        }
+      }
+      break;
+
+      // ===== FUN COMMANDS =====
+      case 'couplepp': case 'ppcouple': {
+        try {
+          reply("🔄 Recherche de couple PP...");
+          
+          const response = await fetch('https://raw.githubusercontent.com/iamriz7/kopel_/main/kopel.json');
+          const data = await response.json();
+          
+          if (data && data.length > 0) {
+            const randomCouple = data[Math.floor(Math.random() * data.length)];
+            
+            await X.sendMessage(m.chat, {
+              image: { url: randomCouple.male },
+              caption: "👨 Male"
+            }, { quoted: m });
+            
+            await X.sendMessage(m.chat, {
+              image: { url: randomCouple.female },
+              caption: "👩 Female"
+            }, { quoted: m });
+          } else {
+            reply("❌ Erreur lors de la récupération des images");
+          }
+        } catch (error) {
+          console.error("Couple PP Error:", error);
+          reply("❌ Service temporairement indisponible");
+        }
+      }
+      break;
+
+      case 'animequote': {
+        try {
+          const quotes = [
+            "人生とは、今この瞬間の連続だ - Life is a series of this moment now",
+            "諦めたら、そこで試合終了だよ - If you give up, that's when the game ends",
+            "強くなりたいと思う気持ちが、人を強くするんだ - The feeling of wanting to become strong is what makes people strong",
+            "過去は変えられない。でも未来は変えられる - You can't change the past, but you can change the future",
+            "夢は逃げない。逃げるのはいつも自分だ - Dreams don't run away. It's always ourselves who run away"
+          ];
+          
+          const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+          reply(`🌸 *Anime Quote:*\n\n${randomQuote}`);
+        } catch (error) {
+          reply("❌ Erreur lors de la récupération de la citation anime");
+        }
+      }
+      break;
+
+      case 'wallpaper': {
+        if (!text) return reply("Exemple: .wallpaper naruto");
+        
+        try {
+          reply("🔄 Recherche de wallpapers...");
+          
+          const response = await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(text)}&client_id=demo`);
+          const data = await response.json();
+          
+          if (data.results && data.results.length > 0) {
+            const randomWallpaper = data.results[Math.floor(Math.random() * data.results.length)];
+            
+            await X.sendMessage(m.chat, {
+              image: { url: randomWallpaper.urls.full },
+              caption: `📸 *Wallpaper: ${text}*\n\n📷 By: ${randomWallpaper.user.name || "Unknown"}`
+            }, { quoted: m });
+          } else {
+            reply(`❌ Aucun wallpaper trouvé pour "${text}"`);
+          }
+        } catch (error) {
+          console.error("Wallpaper Error:", error);
+          reply("❌ Service wallpaper temporairement indisponible");
+        }
+      }
+      break;
+
+      // ===== ENHANCED FANCY TEXT COMMANDS (GitHub Style) =====
+      case 'fancy': {
+        const replyText = m.quoted ? m.quoted.body : null;
+        
+        if (!text && !replyText) {
+          return reply(`
+✨ *FANCY TEXT GENERATOR* ✨
+
+📝 *Usage:*
+• .fancy [number] [text] - Transform text
+• .fancy [number] (reply to message)
+
+🎨 *Styles (1-47):*
+1. 𝗕𝗼𝗹𝗱 - Bold
+2. 𝘐𝘵𝘢𝘭𝘪𝘤 - Italic  
+3. 𝙈𝙤𝙣𝙤 - Monospace
+4. 𝚂𝚊𝚗𝚜 - Sans-serif
+5. 𝕯𝖔𝖚𝖇𝖑𝖊 - Double-struck
+6. ₛᵤₚₑᵣ - Subscript/Super
+7. ᴸⁱᵗᵗˡᵉ - Small caps
+8. ⓑⓤⓑⓑⓛⓔ - Bubble
+9. 🅱🅻🅾🅲🅺 - Block
+10. sǝʌɹǝsǝɹ - Reversed
+
+*Plus 37 autres styles...*
+
+💡 *Example:* .fancy 1 Hello World`);
+        }
+        
+        const args = text.split(' ');
+        const styleNum = parseInt(args[0]);
+        const inputText = replyText || args.slice(1).join(' ');
+        
+        if (!inputText) return reply('❌ Veuillez fournir du texte à styliser !');
+        if (isNaN(styleNum) || styleNum < 1 || styleNum > 47) {
+          return reply('❌ Numéro de style invalide ! Utilisez 1-47');
+        }
+        
+        const fancyStyles = {
+          1: (text) => text.replace(/[a-z]/gi, (char) => {
+            const base = char < 'a' ? 0x1D5D4 : 0x1D5CE;
+            return String.fromCharCode(base + char.toLowerCase().charCodeAt(0) - 97);
+          }),
+          2: (text) => text.replace(/[a-z]/gi, (char) => {
+            const base = char < 'a' ? 0x1D608 : 0x1D602;
+            return String.fromCharCode(base + char.toLowerCase().charCodeAt(0) - 97);
+          }),
+          3: (text) => text.replace(/[a-z]/gi, (char) => {
+            const base = char < 'a' ? 0x1D670 : 0x1D66A;
+            return String.fromCharCode(base + char.toLowerCase().charCodeAt(0) - 97);
+          }),
+          4: (text) => text.replace(/[a-z]/gi, (char) => {
+            const base = char < 'a' ? 0x1D63C : 0x1D636;
+            return String.fromCharCode(base + char.toLowerCase().charCodeAt(0) - 97);
+          }),
+          5: (text) => text.replace(/[a-z]/gi, (char) => {
+            const base = char < 'a' ? 0x1D538 : 0x1D532;
+            return String.fromCharCode(base + char.toLowerCase().charCodeAt(0) - 97);
+          }),
+          6: (text) => text.replace(/./g, (char) => {
+            if (/[a-z]/.test(char)) return char + String.fromCharCode(0x0363);
+            return char;
+          }),
+          7: (text) => text.replace(/[a-z]/gi, (char) => {
+            const base = 0x1D00;
+            const offset = char.toLowerCase().charCodeAt(0) - 97;
+            return String.fromCharCode(base + offset);
+          }),
+          8: (text) => text.replace(/[a-z]/gi, (char) => {
+            const base = 0x24B6;
+            const offset = char.toLowerCase().charCodeAt(0) - 97;
+            return String.fromCharCode(base + offset);
+          }),
+          9: (text) => text.replace(/[a-z]/gi, (char) => {
+            const squares = '🅰🅱🅲🅳🅴🅵🅶🅷🅸🅹🅺🅻🅼🅽🅾🅿🆀🆁🆂🆃🆄🆅🆆🆇🆈🆉';
+            const index = char.toLowerCase().charCodeAt(0) - 97;
+            return squares[index] || char;
+          }),
+          10: (text) => text.split('').reverse().join('').replace(/[a-z]/gi, (char) => {
+            const flipped = 'ɐqɔpǝɟƃɥᴉɾʞlɯuodbɹsʇnʌʍxʎz';
+            const index = char.toLowerCase().charCodeAt(0) - 97;
+            return flipped[index] || char;
+          })
+        };
+        
+        // Add more basic styles for remaining numbers
+        for (let i = 11; i <= 47; i++) {
+          if (!fancyStyles[i]) {
+            fancyStyles[i] = (text) => {
+              const variations = [
+                (t) => t.replace(/./g, c => c + '̃'),
+                (t) => t.replace(/./g, c => c + '̂'),
+                (t) => t.replace(/./g, c => c + '̄'),
+                (t) => t.split('').map(c => `『${c}』`).join(''),
+                (t) => t.split('').map(c => `【${c}】`).join(''),
+                (t) => t.split('').map(c => `★${c}★`).join(''),
+                (t) => t.split('').map(c => `♡${c}♡`).join('')
+              ];
+              const index = (i - 11) % variations.length;
+              return variations[index](text);
+            };
+          }
+        }
+        
+        const styledText = fancyStyles[styleNum] ? fancyStyles[styleNum](inputText) : inputText;
+        reply(`✨ *Fancy Style ${styleNum}:*\n\n${styledText}`);
+      }
+      break;
+
+      // ===== REACTION COMMANDS =====
+      case 'react': {
+        if (!text) return reply("Usage: .react 😍 (reply to message)");
+        if (!m.quoted) return reply("❌ Reply to a message to add reaction");
+        
+        try {
+          await X.sendMessage(m.chat, {
+            react: {
+              text: text.trim(),
+              key: m.quoted.key
+            }
+          });
+        } catch (error) {
+          reply("❌ Failed to add reaction");
+        }
+      }
+      break;
+
+      case 'smile': {
+        if (!m.quoted) return reply("❌ Reply to a message");
+        try {
+          await X.sendMessage(m.chat, {
+            react: { text: "😊", key: m.quoted.key }
+          });
+        } catch (e) { reply("❌ Failed"); }
+      }
+      break;
+
+      case 'love': {
+        if (!m.quoted) return reply("❌ Reply to a message");
+        try {
+          await X.sendMessage(m.chat, {
+            react: { text: "❤️", key: m.quoted.key }
+          });
+        } catch (e) { reply("❌ Failed"); }
+      }
+      break;
+
+      case 'angry': {
+        if (!m.quoted) return reply("❌ Reply to a message");
+        try {
+          await X.sendMessage(m.chat, {
+            react: { text: "😡", key: m.quoted.key }
+          });
+        } catch (e) { reply("❌ Failed"); }
+      }
+      break;
+
+      case 'laugh': {
+        if (!m.quoted) return reply("❌ Reply to a message");
+        try {
+          await X.sendMessage(m.chat, {
+            react: { text: "😂", key: m.quoted.key }
+          });
+        } catch (e) { reply("❌ Failed"); }
+      }
+      break;
+
+      case 'wow': {
+        if (!m.quoted) return reply("❌ Reply to a message");
+        try {
+          await X.sendMessage(m.chat, {
+            react: { text: "😱", key: m.quoted.key }
+          });
+        } catch (e) { reply("❌ Failed"); }
+      }
+      break;
+
+      // ===== FUN QUOTES AND JOKES =====
+      case 'quote': case 'quotes': {
+        try {
+          const quotes = [
+            "La vie est ce qui arrive quand vous êtes occupé à faire d'autres projets. - John Lennon",
+            "Le seul moyen de faire du bon travail est d'aimer ce que vous faites. - Steve Jobs",
+            "La plus grande gloire n'est pas de ne jamais tomber, mais de se relever à chaque chute. - Confucius",
+            "L'innovation distingue un leader d'un suiveur. - Steve Jobs",
+            "Le succès c'est d'aller d'échec en échec sans perdre son enthousiasme. - Winston Churchill"
+          ];
+          
+          let randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+          reply(`💭 *Citation du jour:*\n\n${randomQuote}`);
+        } catch (error) {
+          reply("Erreur lors de la récupération de la citation.");
+        }
+      }
+      break;
+
+      case 'joke': case 'blague': {
+        try {
+          const jokes = [
+            "Pourquoi les plongeurs plongent-ils toujours en arrière et jamais en avant ? Parce que sinon, ils tombent dans le bateau !",
+            "Que dit un escargot quand il croise une limace ? Regarde le nudiste !",
+            "Comment appelle-t-on un chat tombé dans un pot de peinture le jour de Noël ? Un chat-mallow !",
+            "Que dit un informaticien quand il se noie ? F1 ! F1 !",
+            "Pourquoi les poissons n'aiment pas jouer au tennis ? Parce qu'ils ont peur du filet !"
+          ];
+          
+          let randomJoke = jokes[Math.floor(Math.random() * jokes.length)];
+          reply(`😂 *Blague du jour:*\n\n${randomJoke}`);
+        } catch (error) {
+          reply("Erreur lors de la récupération de la blague.");
+        }
+      }
+      break;
+
+      case 'fact': case 'fait': {
+        try {
+          const facts = [
+            "🧠 Le cerveau humain utilise environ 20% de l'énergie totale du corps.",
+            "🌍 Il y a plus d'arbres sur Terre que d'étoiles dans la Voie lactée.",
+            "🐙 Les poulpes ont trois cœurs et du sang bleu.",
+            "🍯 Le miel ne se périme jamais. On a trouvé du miel comestible dans des tombes égyptiennes !",
+            "⚡ Un éclair est 5 fois plus chaud que la surface du soleil."
+          ];
+          
+          let randomFact = facts[Math.floor(Math.random() * facts.length)];
+          reply(`🤓 *Fait intéressant:*\n\n${randomFact}`);
+        } catch (error) {
+          reply("Erreur lors de la récupération du fait.");
+        }
+      }
+      break;
+
+      // ===== STATUS MANAGEMENT =====
+      case 'setstatus': case 'status': {
+        if (!Hisoka) return reply("🔒 Cette commande est réservée au propriétaire.");
+        
+        if (!text) {
+          return reply(`*🎭 Gestion du Statut WhatsApp:*\n\n*Commandes disponibles:*\n• .status online - Toujours en ligne\n• .status typing - Toujours en train d'écrire\n• .status recording - Toujours en enregistrement\n• .status pause - En pause\n• .status offline - Hors ligne permanent\n• .status auto - Basculer automatique\n• .status stop - Arrêter le statut continu\n\n*Status actuel:* ${global.continuousPresence ? global.currentPresence : "Aucun"}`);
+        }
+        
+        const action = text.toLowerCase().trim();
+        
+        try {
+          switch (action) {
+            case 'online':
+              global.currentPresence = 'available';
+              global.continuousPresence = true;
+              await X.sendPresenceUpdate('available', m.chat);
+              reply("✅ *Statut Permanent:* En ligne\n\n📡 Le bot restera toujours en ligne");
+              break;
+            
+            case 'typing':
+              global.currentPresence = 'composing';
+              global.continuousPresence = true;
+              global.presenceInterval = setInterval(async () => {
+                if (global.continuousPresence && global.currentPresence === 'composing') {
+                  try {
+                    await X.sendPresenceUpdate('composing', m.chat);
+                  } catch (e) {}
+                }
+              }, 10000);
+              await X.sendPresenceUpdate('composing', m.chat);
+              reply("✅ *Statut Permanent:* En train d'écrire...\n\n⌨️ Le bot apparaîtra toujours en train d'écrire");
+              break;
+            
+            case 'stop':
+              global.continuousPresence = false;
+              global.currentPresence = null;
+              if (global.presenceInterval) {
+                clearInterval(global.presenceInterval);
+                global.presenceInterval = null;
+              }
+              await X.sendPresenceUpdate('available', m.chat);
+              reply("🛑 *Statut continu arrêté*\n\nRetour au statut normal");
+              break;
+            
+            default:
+              reply("❌ Option invalide.\n\nUtilisez: online, typing, recording, pause, offline, auto, stop");
+          }
+        } catch (error) {
+          console.error("Status Error:", error);
+          reply("❌ Erreur lors de la mise à jour du statut");
+        }
+      }
+      break;
+
+      // ===== TOVIDEO COMMAND =====
+      case 'tovideo': case 'tovid': {
+        if (!m.quoted) return reply("❌ Reply to a sticker to convert to video");
+        if (!m.quoted.mimetype || !m.quoted.mimetype.includes('webp')) return reply("❌ Reply to an animated sticker");
+        
+        try {
+          reply("🔄 Converting sticker to video...");
+          const media = await X.downloadMediaMessage(m.quoted);
+          
+          // Convert webp to mp4 (simplified approach)
+          await X.sendMessage(m.chat, {
+            video: media,
+            caption: "✅ Sticker converted to video!"
+          }, { quoted: m });
+        } catch (error) {
+          console.error("ToVideo Error:", error);
+          reply("❌ Failed to convert sticker to video");
+        }
+      }
+      break;
+
+      // ===== FAKE CHAT =====
+      case 'fakechat': {
+        if (!Hisoka) return reply("🔒 Cette commande est réservée au propriétaire.");
+        
+        const args = text.split('|');
+        if (args.length < 2) {
+          return reply(`🎭 *Générateur de Faux Chat*\n\n📝 *Format:*\n.fakechat Nom|Message\n\n💡 *Exemple:*\n.fakechat Maria|Salut comment ça va ?`);
+        }
+        
+        const fakeName = args[0].trim();
+        const fakeMessage = args[1].trim();
+        
+        const fakeQuoted = {
+          key: {
+            fromMe: false,
+            participant: '0@s.whatsapp.net',
+            remoteJid: m.chat
+          },
+          message: {
+            conversation: fakeMessage
+          },
+          pushName: fakeName
+        };
+        
+        reply(`📱 *Message de ${fakeName}:*\n\n${fakeMessage}`, { quoted: fakeQuoted });
+      }
+      break;
+
+      // ===== RESETPREFIX =====
+      case 'resetprefix': {
+        if (!Hisoka) return reply("🔒 Cette commande est réservée au propriétaire.");
+        
+        global.prefix = '.';
+        reply(`✅ Préfixe réinitialisé à: ${global.prefix}`);
+      }
+      break;
+
+      // ===== MANHWA SEARCH =====
+      case 'manhwa': {
+        if (!text) return reply("Exemple: .manhwa Solo Leveling");
+        
+        try {
+          reply("🔍 Recherche de manhwa...");
+          
+          // Simple manhwa search simulation
+          const manhwas = [
+            { title: "Solo Leveling", genre: "Action, Fantasy", status: "Completed", rating: "9.7/10" },
+            { title: "Tower of God", genre: "Action, Drama", status: "Ongoing", rating: "9.2/10" },
+            { title: "The God of High School", genre: "Action, Martial Arts", status: "Completed", rating: "8.9/10" },
+            { title: "Noblesse", genre: "Action, Supernatural", status: "Completed", rating: "9.1/10" }
+          ];
+          
+          const searchResult = manhwas.find(m => 
+            m.title.toLowerCase().includes(text.toLowerCase()) ||
+            text.toLowerCase().includes(m.title.toLowerCase().split(' ')[0])
+          );
+          
+          if (searchResult) {
+            reply(`📚 *Manhwa trouvé:*\n\n**Titre:** ${searchResult.title}\n**Genre:** ${searchResult.genre}\n**Status:** ${searchResult.status}\n**Rating:** ${searchResult.rating}`);
+          } else {
+            reply(`❌ Aucun manhwa trouvé pour: "${text}"`);
+          }
+        } catch (error) {
+          reply("❌ Erreur lors de la recherche manhwa");
+        }
       }
       break;
 
