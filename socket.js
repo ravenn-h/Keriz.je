@@ -752,15 +752,15 @@ ${waktuucapan}
 
           let menu = ""
 
-          if (subcmd === "ai") menu = aiMenu
-          else if (subcmd === "tools") menu = toolsMenu
-          else if (subcmd === "group") menu = groupMenu
-          else if (subcmd === "owner") menu = ownerMenu
-          else if (subcmd === "search") menu = searchMenu
-          else if (subcmd === "sticker") menu = stickerMenu
-          else if (subcmd === "other") menu = otherMenu
-          else if (subcmd === "downloader") menu = downloaderMenu
-          else if (subcmd === "all") {
+          if (subcmd === "menu ai") menu = aiMenu
+          else if (subcmd === "menu tools") menu = toolsMenu
+          else if (subcmd === "menu group") menu = groupMenu
+          else if (subcmd === "menu owner") menu = ownerMenu
+          else if (subcmd === "menu search") menu = searchMenu
+          else if (subcmd === "menu sticker") menu = stickerMenu
+          else if (subcmd === "menu other") menu = otherMenu
+          else if (subcmd === "menu downloader") menu = downloaderMenu
+          else if (subcmd === "allmenu") {
             menu = [otherMenu, downloaderMenu, stickerMenu, ownerMenu, groupMenu, toolsMenu, searchMenu, aiMenu].join(
               "\n",
             )
@@ -810,8 +810,8 @@ ${waktuucapan}
                 isForwarded: true,
                 mentionedJid: [sender],
                 externalAdReply: {
-                  title: "MERILDA",
-                  body: "Hisoka",
+                  title: "𝚅𝚛𝚞𝚜𝚑 𝙼𝚊𝚛𝚒𝚊 ",
+                  body: "𝕽𝖆𝖛𝖊𝖓-𝓗𝓲𝓼𝓸𝓴𝓪",
                   thumbnail: fs.readFileSync("./media/thumb.png"),
                   sourceUrl: wagc,
                   mediaType: 1,
@@ -1019,7 +1019,7 @@ ${waktuucapan}
                   externalAdReply: {
                     showAdAttribution: true,
                     title: hasil.title || "Sans titre",
-                    body: `MERILDA`,
+                    body: `𝚅𝚛𝚞𝚜𝚑 𝙼𝚊𝚛𝚒𝚊 `,
                     sourceUrl: text,
                     thumbnailUrl: hasil.thumb || "https://example.com/default_thumbnail.jpg",
                     mediaType: 1,
@@ -1089,7 +1089,7 @@ ${waktuucapan}
                   externalAdReply: {
                     showAdAttribution: true,
                     title: firstVideo.title || "Sans titre",
-                    body: `MERILDA`,
+                    body: `𝚅𝚛𝚞𝚜𝚑 𝙼𝚊𝚛𝚒𝚊 `,
                     sourceUrl: firstVideo.url,
                     thumbnailUrl: firstVideo.thumbnail || "https://example.com/default_thumbnail.jpg",
                     mediaType: 1,
@@ -1121,7 +1121,7 @@ ${waktuucapan}
                     externalAdReply: {
                       showAdAttribution: true,
                       title: firstVideo.title || "Sans titre",
-                      body: `MERILDA`,
+                      body: `𝚅𝚛𝚞𝚜𝚑 𝙼𝚊𝚛𝚒𝚊 `,
                       sourceUrl: firstVideo.url,
                       thumbnailUrl: firstVideo.thumbnail || "https://example.com/default_thumbnail.jpg",
                       mediaType: 1,
@@ -1148,7 +1148,7 @@ ${waktuucapan}
                     externalAdReply: {
                       showAdAttribution: true,
                       title: firstVideo.title || "Sans titre",
-                      body: `MERILDA`,
+                      body: `𝚅𝚛𝚞𝚜𝚑 𝙼𝚊𝚛𝚒𝚊 `,
                       sourceUrl: firstVideo.url,
                       thumbnailUrl: firstVideo.thumbnail || "https://example.com/default_thumbnail.jpg",
                       mediaType: 1,
