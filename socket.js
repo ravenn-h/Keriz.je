@@ -3577,28 +3577,6 @@ _Je suis Vrush-maria qui peut t'aider à rechercher, jouer ou télécharger. Je 
       }
       break;
 
-      case 'tagall': {
-        if (!m.isGroup) return reply("Cette commande ne peut être utilisée que dans des groupes.");
-
-        let participants = groupMetadata.participants || [];
-        let message = text || "";
-        let mentions = participants.map(a => a.id);
-        
-        let teks = `*📢 ANNONCE *\n\n`
-        teks += `💬 *Message:* ${message}\n\n`
-  
-        for (const mem of participants) {
-          teks += `┣➥ @${mem.id.split('@')[0]}\n`
-        }
-
-        teks += `*└ 𝚅𝚛𝚞𝚜𝚑 𝙼𝚊𝚛𝚒𝚊 𝚟𝟸*`
-
-        await X.sendMessage(m.chat, {
-          text: teks,
-          mentions: participants.map((a) => a.id)
-        }, { quoted: m })
-      }
-      break;
 
       // ===== IMAGE PROCESSING =====
       case 'enhance': case 'upscale': {
@@ -3826,7 +3804,7 @@ _Je suis Vrush-maria qui peut t'aider à rechercher, jouer ou télécharger. Je 
       // ===== REACTION COMMANDS =====
       case 'react': {
         if (!text) return reply("Usage: .react 😍 (reply to message)");
-        if (!m.quoted) return reply("❌ Reply to a message to add reaction");
+        
         
         try {
           await X.sendMessage(m.chat, {
@@ -3842,7 +3820,7 @@ _Je suis Vrush-maria qui peut t'aider à rechercher, jouer ou télécharger. Je 
       break;
 
       case 'smile': {
-        if (!m.quoted) return reply("❌ Reply to a message");
+        
         try {
           await X.sendMessage(m.chat, {
             react: { text: "😊", key: m.quoted.key }
@@ -3852,7 +3830,7 @@ _Je suis Vrush-maria qui peut t'aider à rechercher, jouer ou télécharger. Je 
       break;
 
       case 'love': {
-        if (!m.quoted) return reply("❌ Reply to a message");
+        
         try {
           await X.sendMessage(m.chat, {
             react: { text: "❤️", key: m.quoted.key }
@@ -3862,7 +3840,7 @@ _Je suis Vrush-maria qui peut t'aider à rechercher, jouer ou télécharger. Je 
       break;
 
       case 'angry': {
-        if (!m.quoted) return reply("❌ Reply to a message");
+   
         try {
           await X.sendMessage(m.chat, {
             react: { text: "😡", key: m.quoted.key }
@@ -3872,7 +3850,7 @@ _Je suis Vrush-maria qui peut t'aider à rechercher, jouer ou télécharger. Je 
       break;
 
       case 'laugh': {
-        if (!m.quoted) return reply("❌ Reply to a message");
+   
         try {
           await X.sendMessage(m.chat, {
             react: { text: "😂", key: m.quoted.key }
@@ -3882,7 +3860,7 @@ _Je suis Vrush-maria qui peut t'aider à rechercher, jouer ou télécharger. Je 
       break;
 
       case 'wow': {
-        if (!m.quoted) return reply("❌ Reply to a message");
+
         try {
           await X.sendMessage(m.chat, {
             react: { text: "😱", key: m.quoted.key }
@@ -3893,7 +3871,7 @@ _Je suis Vrush-maria qui peut t'aider à rechercher, jouer ou télécharger. Je 
 
       // ===== NOUVELLES RÉACTIONS =====
       case 'fire': {
-        if (!m.quoted) return reply("❌ Reply to a message");
+   
         try {
           await X.sendMessage(m.chat, {
             react: { text: "🔥", key: m.quoted.key }
@@ -3903,7 +3881,7 @@ _Je suis Vrush-maria qui peut t'aider à rechercher, jouer ou télécharger. Je 
       break;
 
       case 'cool': {
-        if (!m.quoted) return reply("❌ Reply to a message");
+        
         try {
           await X.sendMessage(m.chat, {
             react: { text: "😎", key: m.quoted.key }
@@ -3913,7 +3891,7 @@ _Je suis Vrush-maria qui peut t'aider à rechercher, jouer ou télécharger. Je 
       break;
 
       case 'crazy': {
-        if (!m.quoted) return reply("❌ Reply to a message");
+   
         try {
           await X.sendMessage(m.chat, {
             react: { text: "🤪", key: m.quoted.key }
@@ -3923,7 +3901,7 @@ _Je suis Vrush-maria qui peut t'aider à rechercher, jouer ou télécharger. Je 
       break;
 
       case 'clap': {
-        if (!m.quoted) return reply("❌ Reply to a message");
+        
         try {
           await X.sendMessage(m.chat, {
             react: { text: "👏", key: m.quoted.key }
@@ -3933,7 +3911,7 @@ _Je suis Vrush-maria qui peut t'aider à rechercher, jouer ou télécharger. Je 
       break;
 
       case 'mind': {
-        if (!m.quoted) return reply("❌ Reply to a message");
+   
         try {
           await X.sendMessage(m.chat, {
             react: { text: "🤯", key: m.quoted.key }
@@ -3943,7 +3921,7 @@ _Je suis Vrush-maria qui peut t'aider à rechercher, jouer ou télécharger. Je 
       break;
 
       case 'party': {
-        if (!m.quoted) return reply("❌ Reply to a message");
+        
         try {
           await X.sendMessage(m.chat, {
             react: { text: "🎉", key: m.quoted.key }
@@ -3953,7 +3931,7 @@ _Je suis Vrush-maria qui peut t'aider à rechercher, jouer ou télécharger. Je 
       break;
 
       case 'skull': {
-        if (!m.quoted) return reply("❌ Reply to a message");
+   
         try {
           await X.sendMessage(m.chat, {
             react: { text: "💀", key: m.quoted.key }
@@ -3963,7 +3941,7 @@ _Je suis Vrush-maria qui peut t'aider à rechercher, jouer ou télécharger. Je 
       break;
 
       case 'think': {
-        if (!m.quoted) return reply("❌ Reply to a message");
+        
         try {
           await X.sendMessage(m.chat, {
             react: { text: "🤔", key: m.quoted.key }
