@@ -259,7 +259,7 @@ module.exports = async (X, m) => {
 
     const GIFBufferToVideoBuffer = async (image) => {
       try {
-        const filename = `${Math.random().toString(36)}`
+        const filename = `gif_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`
         const gifPath = `./gif/${filename}.gif`
         const mp4Path = `./gif/${filename}.mp4`
         
@@ -735,31 +735,30 @@ module.exports = async (X, m) => {
           const subcmd = args[0] ? args[0].toLowerCase() : ""
 
           const infoBot = `
-👋 Salut, ${pushname}
-Je suis Vrush-maria qui peut t'aider à rechercher, jouer ou télécharger. Je peux aussi être un compagnon de chat, un confident.
+_👋 ${waktuucapan}, ${pushname}_
+_Je suis Vrush-maria qui peut t'aider à rechercher, jouer ou télécharger. Je peux aussi être un compagnon de chat, un confident._
 
-╭─ ⌬ Infos Bot
-│ • nom     : ${botname}
-│ • propriétaire  : ${ownername}
-│ • version  : ${botver}
-│ • type   : ${typebot}
-│ • commandes  : ${totalcmd()}
+╭─ ⌬ _Infos Bot_
+│ • _nom_ : *${botname}*
+│ • _propriétaire_ : *${ownername}*
+│ • _version_ : *${botver}*
+│ • _type_ : *${typebot}*
+│ • _commandes_ : *${totalcmd()}*
+│ • _préfixe_ : *${global.prefix}*
 ╰─────────────
-
-${waktuucapan}
 
 `.trim()
 
           let menu = ""
 
-          if (subcmd === "menu ai") menu = aiMenu
-          else if (subcmd === "menu tools") menu = toolsMenu
-          else if (subcmd === "menu group") menu = groupMenu
-          else if (subcmd === "menu owner") menu = ownerMenu
-          else if (subcmd === "menu search") menu = searchMenu
-          else if (subcmd === "menu sticker") menu = stickerMenu
-          else if (subcmd === "menu other") menu = otherMenu
-          else if (subcmd === "menu downloader") menu = downloaderMenu
+          if (subcmd === "ai" || subcmd === "menu ai") menu = aiMenu
+          else if (subcmd === "tools" || subcmd === "menu tools") menu = toolsMenu
+          else if (subcmd === "group" || subcmd === "menu group") menu = groupMenu
+          else if (subcmd === "owner" || subcmd === "menu owner") menu = ownerMenu
+          else if (subcmd === "search" || subcmd === "menu search") menu = searchMenu
+          else if (subcmd === "sticker" || subcmd === "menu sticker") menu = stickerMenu
+          else if (subcmd === "other" || subcmd === "menu other") menu = otherMenu
+          else if (subcmd === "downloader" || subcmd === "menu downloader") menu = downloaderMenu
           else if (subcmd === "allmenu") {
             menu = [otherMenu, downloaderMenu, stickerMenu, ownerMenu, groupMenu, toolsMenu, searchMenu, aiMenu].join(
               "\n",
@@ -767,35 +766,35 @@ ${waktuucapan}
           } else {
             menu = `
 
-📂 *MENU PRINCIPAL* 📂
+📂 *_MENU PRINCIPAL_* 📂
 
 ┌──────────────────┐
-│ 📋 **TOUS LES MENUS** │
+│ 📋 *_TOUS LES MENUS_* │
 └──────────────────┘
 
-▢ .owner - 👤 Owner Menu
-▢ .info - ℹ️ Info Menu  
-▢ .downloader - ⬇️ Download Menu
-▢ .fun - 🎮 Fun Menu
-▢ .reactions - 😊 Reactions Menu
-▢ .tools - 🛠️ Tools Menu
+▢ _${global.prefix}owner_ - 👤 _Owner Menu_
+▢ _${global.prefix}info_ - ℹ️ _Info Menu_  
+▢ _${global.prefix}downloader_ - ⬇️ _Download Menu_
+▢ _${global.prefix}fun_ - 🎮 _Fun Menu_
+▢ _${global.prefix}reactions_ - 😊 _Reactions Menu_
+▢ _${global.prefix}tools_ - 🛠️ _Tools Menu_
 
 ┌──────────────────┐
-│ 🚀 **RACCOURCIS** │
+│ 🚀 *_RACCOURCIS_* │
 └──────────────────┘
 
-▢ .ai - Chat avec AI
-▢ .fancy - Texte stylé (1-47)
-▢ .saver - Status downloader
-▢ .play - YouTube audio
-▢ .tiktok - TikTok video
-▢ .wallpaper - HD wallpapers
+▢ _${global.prefix}ai_ - _Chat avec AI_
+▢ _${global.prefix}fancy_ - _Texte stylé (1-47)_
+▢ _${global.prefix}saver_ - _Status downloader_
+▢ _${global.prefix}play_ - _YouTube audio_
+▢ _${global.prefix}tiktok_ - _TikTok video_
+▢ _${global.prefix}wallpaper_ - _HD wallpapers_
 
 ┌──────────────────┐
-│ ⚡ **${botname}** │
+│ ⚡ *_${botname}_* │
 └──────────────────┘
 
-💡 *Utilise .nomduMenu pour un menu spécifique*
+💡 _Utilise ${global.prefix}nomduMenu pour un menu spécifique_
 `.trim()
           }
 
@@ -1501,15 +1500,34 @@ ${waktuucapan}
           if (!/webp/.test(mime)) return reply(`Répondre au sticker avec *${prefix + command}*`)
           // Message d'attente
           reply(global.mess.wait)
-          const media = await X.downloadAndSaveMediaMessage(quoted)
-          const ran = await getRandom(".png")
-          exec(`ffmpeg -i ${media} ${ran}`, (err) => {
-            fs.unlinkSync(media)
-            if (err) throw err
-            const buffer = fs.readFileSync(ran)
-            X.sendMessage(m.chat, { image: buffer }, { quoted: m })
-            fs.unlinkSync(ran)
-          })
+          try {
+            const media = await X.downloadAndSaveMediaMessage(quoted)
+            const ran = `./tmp/converted_${Date.now()}.png`
+            
+            // Create tmp directory if it doesn't exist
+            if (!fs.existsSync('./tmp')) {
+              fs.mkdirSync('./tmp', { recursive: true });
+            }
+            
+            exec(`ffmpeg -i "${media}" "${ran}"`, (err) => {
+              if (fs.existsSync(media)) fs.unlinkSync(media)
+              if (err) {
+                console.error('Conversion error:', err)
+                return reply("❌ Échec de la conversion")
+              }
+              try {
+                const buffer = fs.readFileSync(ran)
+                X.sendMessage(m.chat, { image: buffer }, { quoted: m })
+                if (fs.existsSync(ran)) fs.unlinkSync(ran)
+              } catch (readError) {
+                console.error('File read error:', readError)
+                reply("❌ Erreur lors de la lecture du fichier")
+              }
+            })
+          } catch (error) {
+            console.error('ToImg error:', error)
+            reply("❌ Erreur lors de la conversion")
+          }
         }
         break
 
@@ -1519,15 +1537,34 @@ ${waktuucapan}
           if (!/webp/.test(mime)) return reply(`Répondre au sticker avec *${prefix + command}*`)
           // Message d'attente
           reply(global.mess.wait)
-          const media = await X.downloadAndSaveMediaMessage(quoted)
-          const ran = await getRandom(".mp4")
-          exec(`ffmpeg -i ${media} ${ran}`, (err) => {
-            fs.unlinkSync(media)
-            if (err) throw err
-            const buffer = fs.readFileSync(ran)
-            X.sendMessage(m.chat, { video: buffer }, { quoted: m })
-            fs.unlinkSync(ran)
-          })
+          try {
+            const media = await X.downloadAndSaveMediaMessage(quoted)
+            const ran = `./tmp/converted_${Date.now()}.mp4`
+            
+            // Create tmp directory if it doesn't exist
+            if (!fs.existsSync('./tmp')) {
+              fs.mkdirSync('./tmp', { recursive: true });
+            }
+            
+            exec(`ffmpeg -i "${media}" "${ran}"`, (err) => {
+              if (fs.existsSync(media)) fs.unlinkSync(media)
+              if (err) {
+                console.error('Conversion error:', err)
+                return reply("❌ Échec de la conversion")
+              }
+              try {
+                const buffer = fs.readFileSync(ran)
+                X.sendMessage(m.chat, { video: buffer }, { quoted: m })
+                if (fs.existsSync(ran)) fs.unlinkSync(ran)
+              } catch (readError) {
+                console.error('File read error:', readError)
+                reply("❌ Erreur lors de la lecture du fichier")
+              }
+            })
+          } catch (error) {
+            console.error('ToVideo error:', error)
+            reply("❌ Erreur lors de la conversion")
+          }
         }
         break
 
@@ -1536,15 +1573,34 @@ ${waktuucapan}
           if (!/webp/.test(mime)) return reply(`Répondre au sticker avec *${prefix + command}*`)
           // Message d'attente
           reply(global.mess.wait)
-          const media = await X.downloadAndSaveMediaMessage(quoted)
-          const ran = await getRandom(".gif")
-          exec(`ffmpeg -i ${media} ${ran}`, (err) => {
-            fs.unlinkSync(media)
-            if (err) throw err
-            const buffer = fs.readFileSync(ran)
-            X.sendMessage(m.chat, { video: buffer, gifPlayback: true }, { quoted: m })
-            fs.unlinkSync(ran)
-          })
+          try {
+            const media = await X.downloadAndSaveMediaMessage(quoted)
+            const ran = `./tmp/converted_${Date.now()}.gif`
+            
+            // Create tmp directory if it doesn't exist
+            if (!fs.existsSync('./tmp')) {
+              fs.mkdirSync('./tmp', { recursive: true });
+            }
+            
+            exec(`ffmpeg -i "${media}" "${ran}"`, (err) => {
+              if (fs.existsSync(media)) fs.unlinkSync(media)
+              if (err) {
+                console.error('Conversion error:', err)
+                return reply("❌ Échec de la conversion")
+              }
+              try {
+                const buffer = fs.readFileSync(ran)
+                X.sendMessage(m.chat, { video: buffer, gifPlayback: true }, { quoted: m })
+                if (fs.existsSync(ran)) fs.unlinkSync(ran)
+              } catch (readError) {
+                console.error('File read error:', readError)
+                reply("❌ Erreur lors de la lecture du fichier")
+              }
+            })
+          } catch (error) {
+            console.error('ToGif error:', error)
+            reply("❌ Erreur lors de la conversion")
+          }
         }
         break
 
@@ -2884,12 +2940,25 @@ ${waktuucapan}
           let statusBuffer, statusType, caption = "";
           const quotedMsg = m.quoted;
           
-          // Check different message types
+          // Check different message types including viewOnceMessage
           if (quotedMsg.message) {
             const msgContent = quotedMsg.message;
             
+            // Check for view once messages first
+            if (msgContent.viewOnceMessage) {
+              const viewOnceContent = msgContent.viewOnceMessage.message;
+              if (viewOnceContent.imageMessage) {
+                statusBuffer = await X.downloadMediaMessage(quotedMsg);
+                statusType = 'image';
+                caption = "📸 *View Once Image Downloaded*\n\n🔄 _Saved from WhatsApp Status_";
+              } else if (viewOnceContent.videoMessage) {
+                statusBuffer = await X.downloadMediaMessage(quotedMsg);
+                statusType = 'video';
+                caption = "🎬 *View Once Video Downloaded*\n\n🔄 _Saved from WhatsApp Status_";
+              }
+            }
             // Image status
-            if (msgContent.imageMessage) {
+            else if (msgContent.imageMessage) {
               statusBuffer = await X.downloadMediaMessage(quotedMsg);
               statusType = 'image';
               caption = "📸 *Status Image Downloaded*\n\n🔄 _Saved from WhatsApp Status_";
@@ -2981,22 +3050,23 @@ ${waktuucapan}
         const menuImage = "https://files.catbox.moe/pkmiz6.jpg";
         const menuText = `
 ┌──────────────────┐
-│ 👤 **OWNER MENU** │
+│ 👤 *_OWNER MENU_* │
 └──────────────────┘
 
-▢ .ai - Chat with AI
-▢ .status - Presence control
-▢ .resetprefix - Reset prefix
-▢ .fakechat - Generate fake chat
-▢ .setvar - Set variable
-▢ .getvar - Get variable
-▢ .allvar - List variables
-▢ .delvar - Delete variable
-▢ .block - Block user
-▢ .unblock - Unblock user
+▢ _${global.prefix}ai_ - _Chat avec AI_
+▢ _${global.prefix}status_ - _Contrôle de présence_
+▢ _${global.prefix}setprefix_ - _Modifier préfixe_
+▢ _${global.prefix}resetprefix_ - _Reset préfixe_
+▢ _${global.prefix}fakechat_ - _Générer faux chat_
+▢ _${global.prefix}setvar_ - _Définir variable_
+▢ _${global.prefix}getvar_ - _Obtenir variable_
+▢ _${global.prefix}allvar_ - _Lister variables_
+▢ _${global.prefix}delvar_ - _Supprimer variable_
+▢ _${global.prefix}block_ - _Bloquer utilisateur_
+▢ _${global.prefix}unblock_ - _Débloquer utilisateur_
 
 ┌──────────────────┐
-│ ⚡ **${botname}** │
+│ ⚡ *_${botname}_* │
 └──────────────────┘`;
 
         await X.sendMessage(m.chat, {
@@ -3010,20 +3080,20 @@ ${waktuucapan}
         const menuImage = "https://files.catbox.moe/3w0llo.jpg";
         const menuText = `
 ┌──────────────────┐
-│ ℹ️ **INFO MENU** │
+│ ℹ️ *_INFO MENU_* │
 └──────────────────┘
 
-▢ .ping
-▢ .runtime
-▢ .speed
-▢ .owner
-▢ .script
-▢ .groupinfo
-▢ .botinfo
-▢ .serverinfo
+▢ _${global.prefix}ping_ - _Test de latence_
+▢ _${global.prefix}runtime_ - _Temps de fonctionnement_
+▢ _${global.prefix}speed_ - _Test de vitesse_
+▢ _${global.prefix}owner_ - _Info propriétaire_
+▢ _${global.prefix}script_ - _Code source_
+▢ _${global.prefix}groupinfo_ - _Info du groupe_
+▢ _${global.prefix}botinfo_ - _Info du bot_
+▢ _${global.prefix}serverinfo_ - _Info du serveur_
 
 ┌──────────────────┐
-│ ⚡ **${botname}** │
+│ ⚡ *_${botname}_* │
 └──────────────────┘`;
 
         await X.sendMessage(m.chat, {
@@ -3037,22 +3107,22 @@ ${waktuucapan}
         const menuImage = "https://files.catbox.moe/k3xvf0.jpg";
         const menuText = `
 ┌──────────────────┐
-│ ⬇️ **DOWNLOAD MENU** │
+│ ⬇️ *_DOWNLOAD MENU_* │
 └──────────────────┘
 
-▢ .play - YouTube audio
-▢ .ytmp3 - YouTube MP3
-▢ .tiktok - TikTok video
-▢ .tt - TikTok shortcut
-▢ .instagram - Instagram
-▢ .ig - IG shortcut
-▢ .facebook - Facebook
-▢ .fb - FB shortcut
-▢ .saver - Status downloader
-▢ .story - Download status
+▢ _${global.prefix}play_ - _YouTube audio_
+▢ _${global.prefix}ytmp3_ - _YouTube MP3_
+▢ _${global.prefix}tiktok_ - _TikTok video_
+▢ _${global.prefix}tt_ - _TikTok raccourci_
+▢ _${global.prefix}instagram_ - _Instagram_
+▢ _${global.prefix}ig_ - _IG raccourci_
+▢ _${global.prefix}facebook_ - _Facebook_
+▢ _${global.prefix}fb_ - _FB raccourci_
+▢ _${global.prefix}saver_ - _Status downloader_
+▢ _${global.prefix}story_ - _Télécharger status_
 
 ┌──────────────────┐
-│ ⚡ **${botname}** │
+│ ⚡ *_${botname}_* │
 └──────────────────┘`;
 
         await X.sendMessage(m.chat, {
@@ -3066,23 +3136,24 @@ ${waktuucapan}
         const menuImage = "https://files.catbox.moe/pkmiz6.jpg";
         const menuText = `
 ┌──────────────────┐
-│ 🎮 **FUN MENU** │
+│ 🎮 *_FUN MENU_* │
 └──────────────────┘
 
-▢ .fancy - Fancy text (1-47)
-▢ .wallpaper - HD wallpapers
-▢ .couplepp - Couple pictures
-▢ .manhwa - Manhwa search
-▢ .animequote - Anime quotes
-▢ .quote - Random quotes
-▢ .joke - Funny jokes
-▢ .fact - Interesting facts
-▢ .hug - Hug reaction
-▢ .kiss - Kiss reaction
-▢ .slap - Slap reaction
+▢ _${global.prefix}fancy_ - _Texte stylé (1-47)_
+▢ _${global.prefix}wallpaper_ - _Fonds d'écran HD_
+▢ _${global.prefix}couplepp_ - _Photos de couple_
+▢ _${global.prefix}manhwa_ - _Recherche manhwa_
+▢ _${global.prefix}animequote_ - _Citations anime_
+▢ _${global.prefix}quote_ - _Citations aléatoires_
+▢ _${global.prefix}joke_ - _Blagues amusantes_
+▢ _${global.prefix}fact_ - _Faits intéressants_
+▢ _${global.prefix}movie_ - _Recherche de films_
+▢ _${global.prefix}hug_ - _Réaction câlin_
+▢ _${global.prefix}kiss_ - _Réaction bisou_
+▢ _${global.prefix}slap_ - _Réaction gifle_
 
 ┌──────────────────┐
-│ ⚡ **${botname}** │
+│ ⚡ *_${botname}_* │
 └──────────────────┘`;
 
         await X.sendMessage(m.chat, {
@@ -3096,23 +3167,31 @@ ${waktuucapan}
         const menuImage = "https://files.catbox.moe/3w0llo.jpg";
         const menuText = `
 ┌──────────────────┐
-│ 😊 **REACTIONS MENU** │
+│ 😊 *_REACTIONS MENU_* │
 └──────────────────┘
 
-▢ .react 😍 - Custom reaction
-▢ .smile - 😊 reaction
-▢ .love - ❤️ reaction  
-▢ .angry - 😡 reaction
-▢ .laugh - 😂 reaction
-▢ .wow - 😱 reaction
-▢ .hug - 🤗 hug GIF
-▢ .kiss - 💋 kiss GIF
-▢ .slap - 👋 slap GIF
+▢ _${global.prefix}react 😍_ - _Réaction personnalisée_
+▢ _${global.prefix}smile_ - 😊 _réaction_
+▢ _${global.prefix}love_ - ❤️ _réaction_
+▢ _${global.prefix}angry_ - 😡 _réaction_
+▢ _${global.prefix}laugh_ - 😂 _réaction_
+▢ _${global.prefix}wow_ - 😱 _réaction_
+▢ _${global.prefix}hug_ - 🤗 _GIF câlin_
+▢ _${global.prefix}kiss_ - 💋 _GIF bisou_
+▢ _${global.prefix}slap_ - 👋 _GIF gifle_
+▢ _${global.prefix}fire_ - 🔥 _réaction feu_
+▢ _${global.prefix}cool_ - 😎 _réaction cool_
+▢ _${global.prefix}crazy_ - 🤪 _réaction fou_
+▢ _${global.prefix}clap_ - 👏 _réaction applaudissements_
+▢ _${global.prefix}mind_ - 🤯 _réaction esprit explosé_
+▢ _${global.prefix}party_ - 🎉 _réaction fête_
+▢ _${global.prefix}skull_ - 💀 _réaction crâne_
+▢ _${global.prefix}think_ - 🤔 _réaction réflexion_
 
-*Reply to a message with these commands*
+*_Répondez à un message avec ces commandes_*
 
 ┌──────────────────┐
-│ ⚡ **${botname}** │
+│ ⚡ *_${botname}_* │
 └──────────────────┘`;
 
         await X.sendMessage(m.chat, {
@@ -3126,21 +3205,23 @@ ${waktuucapan}
         const menuImage = "https://files.catbox.moe/k3xvf0.jpg";
         const menuText = `
 ┌──────────────────┐
-│ 🛠️ **TOOLS MENU** │
+│ 🛠️ *_TOOLS MENU_* │
 └──────────────────┘
 
-▢ .enhance - Upscale images
-▢ .upscale - AI enhancement  
-▢ .rvo - Read view once
-▢ .vv - View once reader
-▢ .qc - Quote creator
-▢ .forward - Forward audio
-▢ .tovideo - Sticker to video
-▢ .sticker - Create sticker
-▢ .s - Sticker shortcut
+▢ _${global.prefix}enhance_ - _Améliorer images_
+▢ _${global.prefix}upscale_ - _Amélioration IA_
+▢ _${global.prefix}rvo_ - _Lire vue unique_
+▢ _${global.prefix}vv_ - _Lecteur vue unique_
+▢ _${global.prefix}qc_ - _Créateur de citation_
+▢ _${global.prefix}forward_ - _Transférer audio_
+▢ _${global.prefix}tovideo_ - _Sticker vers vidéo_
+▢ _${global.prefix}sticker_ - _Créer sticker_
+▢ _${global.prefix}s_ - _Raccourci sticker_
+▢ _${global.prefix}take_ - _Modifier sticker_
+▢ _${global.prefix}mp4_ - _Sticker vers MP4_
 
 ┌──────────────────┐
-│ ⚡ **${botname}** │
+│ ⚡ *_${botname}_* │
 └──────────────────┘`;
 
         await X.sendMessage(m.chat, {
@@ -3810,6 +3891,87 @@ ${waktuucapan}
       }
       break;
 
+      // ===== NOUVELLES RÉACTIONS =====
+      case 'fire': {
+        if (!m.quoted) return reply("❌ Reply to a message");
+        try {
+          await X.sendMessage(m.chat, {
+            react: { text: "🔥", key: m.quoted.key }
+          });
+        } catch (e) { reply("❌ Failed"); }
+      }
+      break;
+
+      case 'cool': {
+        if (!m.quoted) return reply("❌ Reply to a message");
+        try {
+          await X.sendMessage(m.chat, {
+            react: { text: "😎", key: m.quoted.key }
+          });
+        } catch (e) { reply("❌ Failed"); }
+      }
+      break;
+
+      case 'crazy': {
+        if (!m.quoted) return reply("❌ Reply to a message");
+        try {
+          await X.sendMessage(m.chat, {
+            react: { text: "🤪", key: m.quoted.key }
+          });
+        } catch (e) { reply("❌ Failed"); }
+      }
+      break;
+
+      case 'clap': {
+        if (!m.quoted) return reply("❌ Reply to a message");
+        try {
+          await X.sendMessage(m.chat, {
+            react: { text: "👏", key: m.quoted.key }
+          });
+        } catch (e) { reply("❌ Failed"); }
+      }
+      break;
+
+      case 'mind': {
+        if (!m.quoted) return reply("❌ Reply to a message");
+        try {
+          await X.sendMessage(m.chat, {
+            react: { text: "🤯", key: m.quoted.key }
+          });
+        } catch (e) { reply("❌ Failed"); }
+      }
+      break;
+
+      case 'party': {
+        if (!m.quoted) return reply("❌ Reply to a message");
+        try {
+          await X.sendMessage(m.chat, {
+            react: { text: "🎉", key: m.quoted.key }
+          });
+        } catch (e) { reply("❌ Failed"); }
+      }
+      break;
+
+      case 'skull': {
+        if (!m.quoted) return reply("❌ Reply to a message");
+        try {
+          await X.sendMessage(m.chat, {
+            react: { text: "💀", key: m.quoted.key }
+          });
+        } catch (e) { reply("❌ Failed"); }
+      }
+      break;
+
+      case 'think': {
+        if (!m.quoted) return reply("❌ Reply to a message");
+        try {
+          await X.sendMessage(m.chat, {
+            react: { text: "🤔", key: m.quoted.key }
+          });
+        } catch (e) { reply("❌ Failed"); }
+      }
+      break;
+
       // ===== FUN QUOTES AND JOKES =====
       case 'quote': case 'quotes': {
         try {
@@ -3974,6 +4136,30 @@ ${waktuucapan}
         
         global.prefix = '.';
         reply(`✅ Préfixe réinitialisé à: ${global.prefix}`);
+      }
+      break;
+
+      case 'setprefix': {
+        if (!Hisoka) return reply("🔒 Cette commande est réservée au propriétaire.");
+        
+        if (!text) {
+          return reply(`🔧 *Modifier le préfixe*\n\n📝 *Usage:* ${global.prefix}setprefix [nouveau_préfixe]\n\n💡 *Exemple:* ${global.prefix}setprefix !\n\n📌 *Préfixe actuel:* ${global.prefix}`);
+        }
+        
+        if (text.length > 3) {
+          return reply("❌ Le préfixe ne peut pas dépasser 3 caractères.");
+        }
+        
+        const oldPrefix = global.prefix;
+        global.prefix = text;
+        
+        // Update setting.js file
+        const fs = require('fs');
+        let settingContent = fs.readFileSync('./setting.js', 'utf8');
+        settingContent = settingContent.replace(/global\.prefix = ".*"/g, `global.prefix = "${text}"`);
+        fs.writeFileSync('./setting.js', settingContent);
+        
+        reply(`✅ *Préfixe modifié avec succès!*\n\n📌 *Ancien préfixe:* ${oldPrefix}\n📌 *Nouveau préfixe:* ${global.prefix}\n\n💡 _Le préfixe a été sauvegardé dans le fichier de configuration._`);
       }
       break;
 
@@ -4715,7 +4901,7 @@ ${waktuucapan}
           const kode = budy.trim().split(/ +/)[0]
           let teks
           try {
-            teks = await eval(`(async () => { ${kode == ">>" ? "return" : ""} ${q}})()`)
+            teks = await eval(`(async () => { ${kode == ">>" ? "return" : ""} ${q} })()`)
           } catch (e) {
             teks = e
           } finally {

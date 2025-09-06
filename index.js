@@ -10,7 +10,6 @@ const _ = require('lodash')
 const yargs = require('yargs/yargs')
 const FileType = require('file-type')
 const PhoneNumber = require('awesome-phonenumber')
-const FileType = require('file-type')
 const path = require('path')
 const fetch = require("node-fetch") 
 const { getBuffer } = require('./library/lib/myfunc')
@@ -372,7 +371,15 @@ for await(const chunk of stream) {
 buffer = Buffer.concat([buffer, chunk])
 }
 let type = await FileType.fromBuffer(buffer)
-let trueFileName = attachExtension ? ('./tmp/' + filename + '.' + type.ext) : './tmp/' + filename
+// Generate safe filename if undefined
+if (!filename || filename === 'undefined') {
+  filename = `media_${Date.now()}`
+}
+// Ensure tmp directory exists
+if (!fs.existsSync('./tmp')) {
+  fs.mkdirSync('./tmp', { recursive: true })
+}
+let trueFileName = attachExtension ? (`./tmp/${filename}.${type.ext}`) : `./tmp/${filename}`
 await fs.writeFileSync(trueFileName, buffer)
 return trueFileName
 }
