@@ -96,7 +96,7 @@ if (connection === "close") {
 let reason = new Boom(lastDisconnect?.error)?.output.statusCode;
 if (reason === DisconnectReason.badSession) {
 console.log(`Fichier de session défaillant, veuillez supprimer le dossier AliceSession et tmp puis effectuer un nouveau jumelage`);
-X.sendMessage('6281543496975@s.whatsapp.net', {
+X.sendMessage('2250104610403@s.whatsapp.net', {
   text: `⚠️ Vrush-maria Déconnecté : ${reason}\nVeuillez vérifier le terminal ou réparer la session.`
 });
   } else if (reason === DisconnectReason.connectionClosed) {
@@ -107,7 +107,7 @@ console.log("Connexion perdue avec le serveur, redémarrage en cours...");
 Merilda();
   } else if (reason === DisconnectReason.connectionReplaced) {
 console.log("Connexion remplacée, une nouvelle session a été ouverte, veuillez redémarrer le bot");
-X.sendMessage('2250101676111@s.whatsapp.net', {
+X.sendMessage('2250104610403@s.whatsapp.net', {
   text: `⚠️ Vrush-maria Déconnecté : ${reason}\nVeuillez vérifier le terminal ou réparer la session.`
 });
   } else if (reason === DisconnectReason.loggedOut) {
@@ -131,7 +131,7 @@ X.newsletterFollow('120363400575205721@newsletter')
 } catch (e) {
 console.error("❌ Erreur lors du suivi du canal :", e);
 }
-X.sendMessage("2250101676111@s.whatsapp.net", {text: `Vrush-maria connecté avec succès ✅`})
+X.sendMessage("2250104610403@s.whatsapp.net", {text: `Vrush-maria connecté avec succès ✅`})
 console.log('[ Connecté ✅]' + JSON.stringify(X.user.id, null, 2));
 }
 });
@@ -390,7 +390,7 @@ let types = await X.getFile(PATH, true)
 let { filename, size, ext, mime, data } = types
 let type = '', mimetype = mime, pathFile = filename
 let media = { mimetype: mime, data }
-pathFile = await writeExif(media, { packname: options.packname ? options.packname : packname, author: options.author ? options.author : '2250101676111', categories: options.categories ? options.categories : [] })
+pathFile = await writeExif(media, { packname: options.packname ? options.packname : packname, author: options.author ? options.author : '2250104610403', categories: options.categories ? options.categories : [] })
 await fs.promises.unlink(filename)
 await X.sendMessage(from, {sticker: {url: pathFile}}, {quoted})
 return fs.promises.unlink(pathFile)
