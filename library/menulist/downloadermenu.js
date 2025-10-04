@@ -1,9 +1,5 @@
 module.exports = `
-╭─────────────────────╮
-│  📥 **DOWNLOADS** 📥
-╰─────────────────────╯
 
-_"Collecte tes trésors numériques ♠️"_
 
 ┌─⊷ 🎵 _**MUSIQUE & AUDIO**_
 │
@@ -32,7 +28,7 @@ _"Collecte tes trésors numériques ♠️"_
 ├─⊷ 📎 \`.toimg\` - _Sticker vers image_
 ├─⊷ 📎 \`.qc\` - _Citation sticker_
 │
-└─⊷ _"Les documents... si précieux ♣️"_
+└─⊷ 
 
 ┌─⊷ 🖼️ _**WALLPAPERS ANIME**_
 │
@@ -42,6 +38,6 @@ _"Collecte tes trésors numériques ♠️"_
 ├─⊷ 🌸 \`.hinata\` - _Wallpaper Hinata_
 ├─⊷ 🌸 \`.couplepp\` - _Photos couple_
 │
-└─⊷ _"L'art... expression de l'âme ♥️"_
+└─⊷ 
 
 `
