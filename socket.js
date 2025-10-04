@@ -429,7 +429,7 @@ module.exports = async (X, m) => {
     }
     const datek = new Date(
       new Date().toLocaleString("en-US", {
-        timeZone: "Asia/Jakarta",
+        timeZone: "Africa/Abidjan",
       }),
     )
     const hours = datek.getHours()
