@@ -39,7 +39,7 @@ browser: ["Ubuntu", "Chrome", "20.0.04"],
 
 if (!X.authState.creds.registered) {
 const phoneNumber = await question('Entrez votre numéro WhatsApp :\n');
-let code = await X.requestPairingCode(phoneNumber, 'XALICIAX');
+let code = await X.requestPairingCode(phoneNumber, 'HISOKAMD');
 code = code?.match(/.{1,4}/g)?.join("-") || code;
 console.log(`Code :`, code);
 }
