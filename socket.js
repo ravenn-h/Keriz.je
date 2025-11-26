@@ -4191,6 +4191,8 @@ _Je suis Vrush-maria qui peut t'aider à rechercher, jouer ou télécharger. Je 
         await m.reply(respon)
       }
       break
+      
+      /////
 
       // ===== ANTI DELETE =====
       case 'antidelete': case 'antidel': {
