@@ -42,7 +42,7 @@ let fs = require('fs')
 let file = require.resolve(__filename)
 fs.watchFile(file, () => {
 fs.unwatchFile(file)
-console.log(`Uodate File 📁 : ${__filename}`)
+console.log(`Update File 📁 : ${__filename}`)
 delete require.cache[file]
 require(file)
 })
